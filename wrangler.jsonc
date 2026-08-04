@@ -1,0 +1,32 @@
+/**
+ * elc-toolkit — remote MCP server for engineeringleaders.io
+ * Served at https://www.engineeringleaders.io/mcp (apex-path convention, see /mcp-launch skill)
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "elc-toolkit",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-03-10",
+	"compatibility_flags": ["nodejs_compat"],
+	"routes": [
+		{ "pattern": "www.engineeringleaders.io/mcp*", "zone_name": "engineeringleaders.io" },
+		{ "pattern": "engineeringleaders.io/mcp*", "zone_name": "engineeringleaders.io" },
+	],
+	"migrations": [
+		{
+			"new_sqlite_classes": ["ElcToolkit"],
+			"tag": "v1",
+		},
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "ElcToolkit",
+				"name": "MCP_OBJECT",
+			},
+		],
+	},
+	"observability": {
+		"enabled": true,
+	},
+}
