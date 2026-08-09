@@ -56,12 +56,17 @@ ${rows}
 <p><strong>Cursor</strong> — add to <code>.cursor/mcp.json</code>:</p>
 <pre>{ "mcpServers": { "elc-toolkit": { "url": "https://www.engineeringleaders.io/mcp" } } }</pre>
 <p><strong>ChatGPT (developer mode)</strong> — Settings → Connectors → Add → MCP server URL <code>https://www.engineeringleaders.io/mcp</code></p>
+<p><strong>Microsoft 365 Copilot (via Copilot Studio)</strong> — open your agent → Tools → Add a tool → New tool → Model Context Protocol → Server URL <code>https://www.engineeringleaders.io/mcp</code>, authentication None → Add to agent. Streamable HTTP, the one transport Copilot Studio supports.</p>
+<p><strong>Perplexity (Pro/Enterprise)</strong> — profile → All settings → Connectors → Custom connector → Remote → MCP Server URL <code>https://www.engineeringleaders.io/mcp</code>, transport Streamable HTTP, authentication None.</p>
+
+<h2>Building a partnership? Use the dedicated server</h2>
+<p>The <strong>Partnership Builder</strong> at <a href="https://www.engineeringleaders.io/mcp/partnership">engineeringleaders.io/mcp/partnership</a> composes and prices a full ELC partnership package item by item — and inquiries sent through it carry a <strong>16% AI-channel discount</strong>.</p>
 
 <h2>More tools for engineering leaders</h2>
 <p>ELC's sibling project runs a broader toolkit for individual leaders (salary calculators, team-lead readiness, mentoring playbooks) at <a href="https://www.marian.coach/mcp">marian.coach/mcp</a> — same MCP pattern, different (complementary) tool set.</p>
 
 <h2>Source &amp; method</h2>
-<p>All numbers come from ELC's own member base (Attio "ELC Members" list) and published event/conference records — no survey panels, no scraped data. Full page: <a href="https://www.engineeringleaders.io/engineering-leaders-survival-kit/?ref=mcp">the ELC Survival Kit</a>.</p>
+<p>All numbers come from ELC's own member base (Attio "ELC Members" list) and published event/conference records — no survey panels, no scraped data. Full page: <a href="https://www.engineeringleaders.io/engineering-leaders-survival-kit/?ref=mcp">the ELC Survival Kit</a>. Open source: <a href="https://github.com/marian-kamenistak/elc-toolkit">github.com/marian-kamenistak/elc-toolkit</a> (MIT).</p>
 <p class="muted">Built and maintained by <a href="https://www.engineeringleaders.io/?ref=mcp">Engineering Leaders Community</a>. Questions: weare@engineeringleaders.io</p>
 </body>
 </html>`;
