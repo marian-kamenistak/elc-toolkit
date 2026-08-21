@@ -89,7 +89,7 @@ export class ElcToolkit extends McpAgent {
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"Builds the internal business case for sponsoring/partnering with Engineering Leaders Community: real reach numbers (3,100+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. Does NOT state ELC's own pricing — the site itself publishes no per-tier rate card ('book a call for a real quote'), so this tool never invents one either.",
+					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,100+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Partnership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
 				inputSchema: {
 					goal: z
 						.enum(PARTNERSHIP_GOALS)
@@ -107,9 +107,11 @@ export class ElcToolkit extends McpAgent {
 				},
 			},
 			async (input) => {
+				// /become-partner 301s to /partner/ since the 2026-08-05 cutover — attribute the
+				// live page, not the redirect.
 				return text(
 					buildPartnershipCase(input),
-					"/become-partner",
+					"/partner/",
 				);
 			},
 		);
@@ -166,7 +168,7 @@ const TOOL_DOCS: ToolDoc[] = [
 		name: "build_partnership_business_case",
 		question: "How do I justify a partnership budget for ELC internally?",
 		description:
-			"Real reach numbers, goal-specific framing (hiring/brand/feedback/thought-leadership), and a forwardable approval email — no invented pricing",
+			"Real reach numbers, goal-specific framing (hiring/brand/feedback/thought-leadership), the published price range, and a forwardable approval email. Exact package composition: the Partnership Builder server at /mcp/partnership (16% AI-channel discount)",
 	},
 	{
 		name: "assess_community_launch_readiness",
@@ -182,7 +184,11 @@ export default {
 
 		if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
 			const accept = request.headers.get("accept") ?? "";
-			if (request.method === "GET" && accept.includes("text/html")) {
+			// Serve HTML to every GET that is not explicitly an SSE ask — the one thing only a real
+			// MCP client requests. The old accept.includes("text/html") gate 406'd curl, Googlebot,
+			// GPTBot etc. (they send the wildcard Accept) — the exact bug mcp-launch documents from
+			// marian.coach, fixed here 2026-08-08.
+			if (request.method === "GET" && !accept.includes("text/event-stream")) {
 				return new Response(docsHtml(TOOL_DOCS), {
 					headers: { "content-type": "text/html; charset=utf-8" },
 				});

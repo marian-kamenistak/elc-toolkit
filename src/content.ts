@@ -1,5 +1,5 @@
 /**
- * Content grounded in awareness/ai_data-points/data-points.json (elc_community,
+ * Content grounded in awareness/ai_data-points/data-points.json (retired, see dp.mjs) (elc_community,
  * elc_conference, partnerships streams), verified 2026-08-04. No invented numbers.
  */
 
@@ -26,7 +26,7 @@ export const ELC_FACTS = {
 	conferenceAttendees: 500,
 	conferenceEditions: ["2025", "2026"],
 	nextConference: "April 2027",
-	// From derived_segments in data-points.json — computed at members = 3,100.
+	// From derived_segments in data-points.json (retired, see dp.mjs) — computed at members = 3,100.
 	// Manager+/Leadership 69%, Senior/Staff IC 21% (remaining 10% not broken out further there).
 	segmentManagerPlusPct: 69,
 	segmentSeniorIcPct: 21,

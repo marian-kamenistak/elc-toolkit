@@ -25,6 +25,7 @@ export function docsHtml(tools: ToolDoc[]): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ELC Toolkit — MCP server | Engineering Leaders Community</title>
 <meta name="description" content="Free remote MCP server for AI assistants: engineering-org leadership-ratio benchmark, partnership business-case builder, and community-launch readiness test, all grounded in real ELC data from 3,100+ engineering leaders. Connect from Claude, Cursor, or ChatGPT.">
+<link rel="canonical" href="https://www.engineeringleaders.io/mcp">
 <style>
 	body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
 	code, pre { background: #f4f4f4; border-radius: 4px; font-size: 0.9em; }
