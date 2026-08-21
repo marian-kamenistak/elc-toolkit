@@ -76,7 +76,7 @@ export class ElcToolkit extends McpAgent {
 			},
 			async ({ managers, senior_ics }) => {
 				const result = benchmarkLeadershipRatio({ managers, senior_ics });
-				return text(result.body, "/engineering-leaders-survival-kit/", {
+				return text(result.body, "/toolkit/", {
 					verdict: result.verdict,
 				});
 			},
@@ -145,11 +145,11 @@ export class ElcToolkit extends McpAgent {
 							: `Missing answers for: ${missing.join(", ")}. All 5 need a true/false before a verdict.`;
 					return text(
 						`${intro}\n\n${readinessQuestionnaireText()}`,
-						"/engineering-leaders-survival-kit/",
+						"/toolkit/",
 					);
 				}
 				const result = assessCommunityReadiness(given as Record<string, boolean>);
-				return text(result.body, "/engineering-leaders-survival-kit/", {
+				return text(result.body, "/toolkit/", {
 					verdict: result.verdict,
 				});
 			},

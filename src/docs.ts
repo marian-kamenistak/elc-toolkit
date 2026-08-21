@@ -67,7 +67,7 @@ ${rows}
 <p>ELC's sibling project runs a broader toolkit for individual leaders (salary calculators, team-lead readiness, mentoring playbooks) at <a href="https://www.marian.coach/mcp">marian.coach/mcp</a> — same MCP pattern, different (complementary) tool set.</p>
 
 <h2>Source &amp; method</h2>
-<p>All numbers come from ELC's own member base (Attio "ELC Members" list) and published event/conference records — no survey panels, no scraped data. Full page: <a href="https://www.engineeringleaders.io/engineering-leaders-survival-kit/?ref=mcp">the ELC Survival Kit</a>. Open source: <a href="https://github.com/marian-kamenistak/elc-toolkit">github.com/marian-kamenistak/elc-toolkit</a> (MIT).</p>
+<p>All numbers come from ELC's own member base (Attio "ELC Members" list) and published event/conference records — no survey panels, no scraped data. Full page: <a href="https://www.engineeringleaders.io/toolkit/?ref=mcp">the ELC Toolkit</a>. Open source: <a href="https://github.com/marian-kamenistak/elc-toolkit">github.com/marian-kamenistak/elc-toolkit</a> (MIT).</p>
 <p class="muted">Built and maintained by <a href="https://www.engineeringleaders.io/?ref=mcp">Engineering Leaders Community</a>. Questions: weare@engineeringleaders.io</p>
 </body>
 </html>`;

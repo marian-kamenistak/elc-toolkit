@@ -14,7 +14,7 @@ This is a remote MCP server. No install, no API key. One URL:
 https://www.engineeringleaders.io/mcp
 ```
 
-Open in a browser instead: [The ELC Toolkit](https://www.engineeringleaders.io/engineering-leaders-survival-kit/).
+Open in a browser instead: [The ELC Toolkit](https://www.engineeringleaders.io/toolkit/).
 
 ## Tools
 
@@ -46,7 +46,7 @@ claude mcp add -t http elc-toolkit https://www.engineeringleaders.io/mcp
 
 All numbers come from ELC's own member base (Attio "ELC Members" list) and its own new-city
 launch playbook, the real doc used to open Brno, Bratislava and Kraków — no survey panels, no
-scraped data. Full page: [engineeringleaders.io/engineering-leaders-survival-kit](https://www.engineeringleaders.io/engineering-leaders-survival-kit/).
+scraped data. Full page: [engineeringleaders.io/toolkit](https://www.engineeringleaders.io/toolkit/).
 
 Built and maintained by [Engineering Leaders Community](https://www.engineeringleaders.io/?ref=mcp). Questions: weare@engineeringleaders.io
 
