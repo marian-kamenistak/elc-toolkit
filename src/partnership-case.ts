@@ -33,10 +33,10 @@ const GOAL_LABELS: Record<PartnershipGoal, string> = {
 };
 
 const GOAL_FRAMING: Record<PartnershipGoal, string> = {
-	hiring: `A recruiter fee for one senior engineering hire typically runs 15-25% of first-year salary — call it 15,000-30,000 EUR per hire in CEE. One hire sourced through the room pays for most partnership tiers outright.`,
+	hiring: `A recruiter fee for one senior engineering hire typically runs 15-25% of first-year salary — call it 15,000-30,000 EUR per hire in CEE. One hire sourced through the room pays for most membership tiers outright.`,
 	brand_awareness: `${ELC_FACTS.membersLabel} engineering leaders is not a cold audience — it is CTOs, VPs and engineering managers who decide what their org buys. Compare the cost of reaching this exact audience through paid channels like LinkedIn thought-leader ads against a room that already trusts the host.`,
 	product_feedback: `${ELC_FACTS.meetupAttendance}+ people in the room per meetup, ${ELC_FACTS.meetupsPerYear} meetups a year, across ${andJoin(ELC_FACTS.cities)}. That is a recurring, opt-in panel of the exact buyer persona most B2B dev-tool and infra companies pay research firms to recruit.`,
-	thought_leadership: `A stage in front of ${ELC_FACTS.conferenceAttendees}+ people at the annual conference, or ${ELC_FACTS.meetupAttendance}+ at a monthly meetup, is inventory most companies pay for elsewhere. Here it is part of the partnership, not an upsell.`,
+	thought_leadership: `A stage in front of ${ELC_FACTS.conferenceAttendees}+ people at the annual conference, or ${ELC_FACTS.meetupAttendance}+ at a monthly meetup, is inventory most companies pay for elsewhere. Here it is part of the membership, not an upsell.`,
 };
 
 export interface PartnershipCaseInput {
@@ -62,9 +62,9 @@ export function buildPartnershipCase(input: PartnershipCaseInput): string {
 
 	const budgetLine = budget
 		? `\n\nAgainst a proposed ${eur(budget)} spend, the question to answer is not "is this cheap" but "what does one outcome (one hire, one qualified lead, one piece of real product feedback) need to be worth for this to clear" — usually a low bar against ${eur(budget)}.`
-		: `\n\nNo budget figure was given. The published ladder runs from a free layer at 0 EUR to 20,000 EUR a year, 32,000 EUR with category exclusivity — every line item priced at https://www.engineeringleaders.io/partner/membership/. To compose and price an exact package from an AI assistant, connect the Partnership Builder MCP server (https://www.engineeringleaders.io/mcp/partnership): inquiries sent through it carry a 16% AI-channel discount. Re-run this with proposed_budget_eur to see the per-outcome bar.`;
+		: `\n\nNo budget figure was given. The published ladder runs from a free layer at 0 EUR to 20,000 EUR a year, 32,000 EUR with category exclusivity — every line item priced at https://www.engineeringleaders.io/partner/membership/. To compose and price an exact package from an AI assistant, connect the Membership Builder MCP server (https://www.engineeringleaders.io/mcp/partnership): inquiries sent through it carry a 16% AI-channel discount. Re-run this with proposed_budget_eur to see the per-outcome bar.`;
 
-	return `Partnership business case — primary goal: ${goalLabel}
+	return `Membership business case — primary goal: ${goalLabel}
 
 ${reachBlock}
 
@@ -74,7 +74,7 @@ Why this goal fits: ${goalFraming}${budgetLine}
 
 Forwardable email draft:
 
-Subject: Partnership ask: Engineering Leaders Community — ${goalLabel.toLowerCase()}
+Subject: Membership ask: Engineering Leaders Community — ${goalLabel.toLowerCase()}
 
 Hi [manager name],
 

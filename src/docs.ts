@@ -24,7 +24,7 @@ export function docsHtml(tools: ToolDoc[]): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ELC Toolkit — MCP server | Engineering Leaders Community</title>
-<meta name="description" content="Free remote MCP server for AI assistants: engineering-org leadership-ratio benchmark, partnership business-case builder, and community-launch readiness test, all grounded in real ELC data from 3,100+ engineering leaders. Connect from Claude, Cursor, or ChatGPT.">
+<meta name="description" content="Free remote MCP server for AI assistants: engineering-org leadership-ratio benchmark, membership business-case builder, and community-launch readiness test, all grounded in real ELC data from 3,100+ engineering leaders. Connect from Claude, Cursor, or ChatGPT.">
 <link rel="canonical" href="https://www.engineeringleaders.io/mcp">
 <style>
 	body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
@@ -60,8 +60,8 @@ ${rows}
 <p><strong>Microsoft 365 Copilot (via Copilot Studio)</strong> — open your agent → Tools → Add a tool → New tool → Model Context Protocol → Server URL <code>https://www.engineeringleaders.io/mcp</code>, authentication None → Add to agent. Streamable HTTP, the one transport Copilot Studio supports.</p>
 <p><strong>Perplexity (Pro/Enterprise)</strong> — profile → All settings → Connectors → Custom connector → Remote → MCP Server URL <code>https://www.engineeringleaders.io/mcp</code>, transport Streamable HTTP, authentication None.</p>
 
-<h2>Building a partnership? Use the dedicated server</h2>
-<p>The <strong>Partnership Builder</strong> at <a href="https://www.engineeringleaders.io/mcp/partnership">engineeringleaders.io/mcp/partnership</a> composes and prices a full ELC partnership package item by item — and inquiries sent through it carry a <strong>16% AI-channel discount</strong>.</p>
+<h2>Building a membership? Use the dedicated server</h2>
+<p>The <strong>Membership Builder</strong> at <a href="https://www.engineeringleaders.io/mcp/partnership">engineeringleaders.io/mcp/partnership</a> composes and prices a full ELC membership package item by item — and inquiries sent through it carry a <strong>16% AI-channel discount</strong>.</p>
 
 <h2>More tools for engineering leaders</h2>
 <p>ELC's sibling project runs a broader toolkit for individual leaders (salary calculators, team-lead readiness, mentoring playbooks) at <a href="https://www.marian.coach/mcp">marian.coach/mcp</a> — same MCP pattern, different (complementary) tool set.</p>

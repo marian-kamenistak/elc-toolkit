@@ -85,11 +85,11 @@ export class ElcToolkit extends McpAgent {
 		this.server.registerTool(
 			"build_partnership_business_case",
 			{
-				title: "ELC partnership business-case builder",
+				title: "ELC membership business-case builder",
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,100+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Partnership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
+					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,100+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
 				inputSchema: {
 					goal: z
 						.enum(PARTNERSHIP_GOALS)
@@ -97,7 +97,7 @@ export class ElcToolkit extends McpAgent {
 					company_name: z
 						.string()
 						.optional()
-						.describe("Optional: the company considering the partnership"),
+						.describe("Optional: the company considering the membership"),
 					proposed_budget_eur: z
 						.number()
 						.optional()
@@ -166,9 +166,9 @@ const TOOL_DOCS: ToolDoc[] = [
 	},
 	{
 		name: "build_partnership_business_case",
-		question: "How do I justify a partnership budget for ELC internally?",
+		question: "How do I justify a membership budget for ELC internally?",
 		description:
-			"Real reach numbers, goal-specific framing (hiring/brand/feedback/thought-leadership), the published price range, and a forwardable approval email. Exact package composition: the Partnership Builder server at /mcp/partnership (16% AI-channel discount)",
+			"Real reach numbers, goal-specific framing (hiring/brand/feedback/thought-leadership), the published price range, and a forwardable approval email. Exact package composition: the Membership Builder server at /mcp/partnership (16% AI-channel discount)",
 	},
 	{
 		name: "assess_community_launch_readiness",
