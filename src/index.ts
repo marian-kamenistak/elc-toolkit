@@ -188,9 +188,22 @@ export default {
 			// MCP client requests. The old accept.includes("text/html") gate 406'd curl, Googlebot,
 			// GPTBot etc. (they send the wildcard Accept) — the exact bug mcp-launch documents from
 			// marian.coach, fixed here 2026-08-08.
-			if (request.method === "GET" && !accept.includes("text/event-stream")) {
-				return new Response(docsHtml(TOOL_DOCS), {
-					headers: { "content-type": "text/html; charset=utf-8" },
+			// HEAD is handled alongside GET, added 2026-08-25. It used to fall through to the MCP
+			// transport below, which 404s it — so `HEAD /mcp` returned 404 while `GET /mcp` returned
+			// 200 on the same URL. That is invisible in a browser and highly visible everywhere else:
+			// link checkers, Slack and Discord unfurlers and HEAD-first crawlers all saw a dead link
+			// on the endpoint github.com and mcpservers.org point at (~23 hits/day at the edge).
+			// Per RFC 9110 a HEAD response carries the GET headers and NO body.
+			if (
+				(request.method === "GET" || request.method === "HEAD") &&
+				!accept.includes("text/event-stream")
+			) {
+				const html = docsHtml(TOOL_DOCS);
+				return new Response(request.method === "HEAD" ? null : html, {
+					headers: {
+						"content-type": "text/html; charset=utf-8",
+						"content-length": String(new TextEncoder().encode(html).length),
+					},
 				});
 			}
 			return ElcToolkit.serve("/mcp").fetch(request, env, ctx);
