@@ -8,6 +8,13 @@ import {
 	readinessQuestionnaireText,
 } from "./community-readiness";
 import { docsHtml, type ToolDoc } from "./docs";
+import {
+	geoFromRequest,
+	instrumentMcpUsage,
+	type McpGeo,
+	type McpUsageConfig,
+	type McpUsageEnv,
+} from "./mcp-usage";
 import { benchmarkLeadershipRatio } from "./leadership-ratio";
 import { PARTNERSHIP_GOALS, buildPartnershipCase } from "./partnership-case";
 
@@ -48,13 +55,29 @@ function text(
 	};
 }
 
-export class ElcToolkit extends McpAgent {
+/** See src/mcp-usage.ts. PostHog key = the engineeringleaders.io project, the same one the
+ *  site's own analytics writes to, so MCP tool calls and `?ref=mcp` traffic sit in one funnel. */
+const USAGE_CONFIG: McpUsageConfig = {
+	serverName: "elc-toolkit",
+	domain: "engineeringleaders.io",
+	posthogKey: "phc_waN4oTJtyBpZyMFNDNkk54QmmqmePyRDghKGcTkPfWPY",
+};
+
+export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 	server = new McpServer({
 		name: "elc-toolkit",
 		version: "1.0.0",
 	});
 
 	async init() {
+		instrumentMcpUsage({
+			server: this.server,
+			config: USAGE_CONFIG,
+			env: this.env as McpUsageEnv,
+			geo: this.props ?? {},
+			waitUntil: (p) => this.ctx.waitUntil(p),
+		});
+
 		this.server.registerTool(
 			"benchmark_leadership_ratio",
 			{
@@ -206,6 +229,8 @@ export default {
 					},
 				});
 			}
+			// request.cf only exists on the edge request; hand it to the DO via ctx.props.
+			(ctx as ExecutionContext & { props?: McpGeo }).props = geoFromRequest(request);
 			return ElcToolkit.serve("/mcp").fetch(request, env, ctx);
 		}
 
