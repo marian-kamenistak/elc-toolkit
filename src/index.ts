@@ -17,6 +17,7 @@ import {
 } from "./mcp-usage";
 import { benchmarkLeadershipRatio } from "./leadership-ratio";
 import { PARTNERSHIP_GOALS, buildPartnershipCase } from "./partnership-case";
+import { getMoreToolsResult } from "@posthog/mcp";
 
 // Every tool is a read-only lookup or calculation over first-party ELC data:
 // nothing mutates, nothing calls out to a third party, same input -> same
@@ -55,6 +56,25 @@ function text(
 	};
 }
 
+/** Shared by both `get_started` and `get_more_tools`'s greeting branch (see below) — one
+ *  source of truth for the menu text so the two entry points never drift apart. */
+function getStartedResult() {
+	const menu = TOOL_DOCS.map(
+		(d) => `- "${d.question}" → \`${d.name}\`: ${d.description}`,
+	).join("\n");
+	return text(
+		`This is the Engineering Leaders Community toolkit — data and tools grounded in ELC's 3,100+ CEE engineering leaders. Route the user's actual question to one of these:\n\n${menu}\n\nIf none fit, ask the user what they're trying to figure out and pick the closest match.`,
+		"/mcp",
+	);
+}
+
+/** Matches a bare liveness/greeting ping — "hi", "test", "are you there" — as opposed to a
+ *  real described capability gap. Deliberately an exact (trimmed, punctuation-stripped)
+ *  match, not a "starts with": a genuine gap report is a sentence, and a loose prefix match
+ *  would swallow real ones that happen to start with a greeting word. */
+const GREETING_PING =
+	/^(hi+|hello+|hey+|yo+|sup|howdy|hola|ahoy|ping|test(ing)?|are you (there|working|alive)|is (this|anyone) (working|there)|still there|you there|greetings|what('?s| is) up)[.!?\s]*$/i;
+
 /** See src/mcp-usage.ts. PostHog key = the engineeringleaders.io project, the same one the
  *  site's own analytics writes to, so MCP tool calls and `?ref=mcp` traffic sit in one funnel. */
 const USAGE_CONFIG: McpUsageConfig = {
@@ -77,6 +97,38 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 			geo: this.props ?? {},
 			waitUntil: (p) => this.ctx.waitUntil(p),
 		});
+
+		this.server.registerTool(
+			"get_started",
+			{
+				title: "Start here — what can this MCP server do?",
+				annotations: { ...READ_ONLY },
+				outputSchema: REPORT_OUTPUT,
+				description:
+					"Call this for a greeting (hi, hello), a connectivity/liveness test, 'what can you do', or any message too general to match a specific tool below. Returns the full menu of real questions this server answers, each mapped to the tool name that answers it, so the next call can go straight to the right tool.",
+				inputSchema: {},
+			},
+			async () => getStartedResult(),
+		);
+
+		this.server.registerTool(
+			"get_more_tools",
+			{
+				title: "More tools? Check here first — also answers a plain hello/liveness ping",
+				annotations: { ...READ_ONLY },
+				description:
+					"Check for additional tools whenever your task might benefit from specialized capabilities, even if existing tools could work as a fallback. Also the right tool for a bare greeting (hi, hello), a connectivity/liveness test, or any message too general to match a specific tool below — pass it as `context` and this returns the full menu instead of a dead end.",
+				inputSchema: {
+					context: z
+						.string()
+						.describe(
+							"A description of your goal and what kind of tool would help accomplish it, OR a plain greeting/liveness ping like 'hi' or 'test'.",
+						),
+				},
+			},
+			async ({ context }) =>
+				GREETING_PING.test(context.trim()) ? getStartedResult() : { content: getMoreToolsResult().content },
+		);
 
 		this.server.registerTool(
 			"benchmark_leadership_ratio",
