@@ -63,7 +63,7 @@ function getStartedResult() {
 		(d) => `- "${d.question}" → \`${d.name}\`: ${d.description}`,
 	).join("\n");
 	return text(
-		`This is the Engineering Leaders Community toolkit — data and tools grounded in ELC's 3,100+ CEE engineering leaders. Route the user's actual question to one of these:\n\n${menu}\n\nIf none fit, ask the user what they're trying to figure out and pick the closest match.`,
+		`This is the Engineering Leaders Community toolkit — data and tools grounded in ELC's 3,300+ CEE engineering leaders. Route the user's actual question to one of these:\n\n${menu}\n\nIf none fit, ask the user what they're trying to figure out and pick the closest match.`,
 		"/mcp",
 	);
 }
@@ -137,7 +137,7 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"Compares a company's manager-vs-senior-IC split against the ELC community's own composition (69% Manager+/Leadership, 21% Senior/Staff IC, computed from 3,100+ CEE engineering leaders). Both counts are for the SAME population — senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs); leave out junior/mid ICs on both sides so the comparison is apples to apples. Returns each side's percentage, the delta from the peer baseline, and a verdict.",
+					"Compares a company's manager-vs-senior-IC split against the ELC community's own composition (69% Manager+/Leadership, 21% Senior/Staff IC, computed from 3,300+ CEE engineering leaders). Both counts are for the SAME population — senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs); leave out junior/mid ICs on both sides so the comparison is apples to apples. Returns each side's percentage, the delta from the peer baseline, and a verdict.",
 				inputSchema: {
 					managers: z
 						.number()
@@ -164,7 +164,7 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,100+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
+					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,300+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
 				inputSchema: {
 					goal: z
 						.enum(PARTNERSHIP_GOALS)
@@ -237,7 +237,7 @@ const TOOL_DOCS: ToolDoc[] = [
 		name: "benchmark_leadership_ratio",
 		question: "Is my org's manager-to-senior-IC ratio healthy?",
 		description:
-			"Compares your split against the ELC peer baseline (69% manager / 21% senior IC across 3,100+ CEE leaders), returns percentages, delta, and a verdict",
+			"Compares your split against the ELC peer baseline (69% manager / 21% senior IC across 3,300+ CEE leaders), returns percentages, delta, and a verdict",
 	},
 	{
 		name: "build_partnership_business_case",

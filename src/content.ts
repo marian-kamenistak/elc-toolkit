@@ -12,9 +12,17 @@ export function andJoin(items: readonly string[]): string {
 	return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
+// 2026-09-04: figures reconciled against the ELC Data Points registry
+// (elc-web/src/data/data-points.generated.json, elc_community stream). `members` had drifted
+// to 3,100 while the registry read 3,300+ / members_live 3,301, so the agent card and the
+// tool's own answer were quoting two different community sizes in one interaction.
+//
+// These are still hand-copied constants, which is why they drifted in the first place. The
+// durable fix is to generate this block from the registry at build time the way elc-web does,
+// with a --check mode that fails the build when it goes stale. Designed, not built yet.
 export const ELC_FACTS = {
-	members: 3100,
-	membersLabel: "3,100+",
+	members: 3300,
+	membersLabel: "3,300+",
 	meetupsPerYear: 12,
 	meetupsHeld: "40+",
 	meetupAttendance: 120,
@@ -26,7 +34,9 @@ export const ELC_FACTS = {
 	conferenceAttendees: 500,
 	conferenceEditions: ["2025", "2026"],
 	nextConference: "April 2027",
-	// From derived_segments in data-points.json (retired, see dp.mjs) — computed at members = 3,100.
+	// From derived_segments in the ELC Data Points registry. Percentages were computed at
+	// members = 3,100 and have NOT been recomputed at 3,300; the registry still publishes them
+	// as 69/21 with a 2026-08-03 verification date, so they stand until it says otherwise.
 	// Manager+/Leadership 69%, Senior/Staff IC 21% (remaining 10% not broken out further there).
 	segmentManagerPlusPct: 69,
 	segmentSeniorIcPct: 21,

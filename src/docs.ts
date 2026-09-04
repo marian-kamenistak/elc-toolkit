@@ -24,7 +24,7 @@ export function docsHtml(tools: ToolDoc[]): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ELC Toolkit — MCP server | Engineering Leaders Community</title>
-<meta name="description" content="Free remote MCP server for AI assistants: engineering-org leadership-ratio benchmark, membership business-case builder, and community-launch readiness test, all grounded in real ELC data from 3,100+ engineering leaders. Connect from Claude, Cursor, or ChatGPT.">
+<meta name="description" content="Free remote MCP server for AI assistants: engineering-org leadership-ratio benchmark, membership business-case builder, and community-launch readiness test, all grounded in real ELC data from 3,300+ engineering leaders. Connect from Claude, Cursor, or ChatGPT.">
 <link rel="canonical" href="https://www.engineeringleaders.io/mcp">
 <style>
 	body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
@@ -41,7 +41,7 @@ export function docsHtml(tools: ToolDoc[]): string {
 </head>
 <body>
 <h1>ELC Toolkit — MCP server</h1>
-<p>A free remote MCP server that gives AI assistants direct access to data from Engineering Leaders Community: 3,100+ engineering leaders across Prague, Brno, Bratislava and Kraków since 2019.</p>
+<p>A free remote MCP server that gives AI assistants direct access to data from Engineering Leaders Community: 3,300+ engineering leaders across Prague, Brno, Bratislava and Kraków since 2019.</p>
 <p><strong>Endpoint:</strong> <code>https://www.engineeringleaders.io/mcp</code> (streamable HTTP, no auth, no signup)</p>
 
 <h2>Tools</h2>
