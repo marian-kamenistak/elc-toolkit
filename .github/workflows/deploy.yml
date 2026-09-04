@@ -77,9 +77,20 @@ jobs:
         run: |
           set -euo pipefail
           sleep 5
-          resp=$(curl -sf -X POST "https://www.engineeringleaders.io/mcp" \
-            -H 'content-type: application/json' \
-            -H 'accept: application/json, text/event-stream' \
-            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}')
+          url="https://www.engineeringleaders.io/mcp"
+          # McpAgent hosts require an mcp-session-id, minted by an initialize call, on
+          # every subsequent request — tools/list included. Skipping this and calling
+          # tools/list directly gets a 400 "Mcp-Session-Id header is required" regardless
+          # of whether the deploy itself succeeded.
+          headers=$(curl -sf -X POST "$url" \
+            -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci-smoke-check","version":"1.0"}}}' \
+            -D - -o /dev/null)
+          session=$(echo "$headers" | grep -i "^mcp-session-id:" | sed -E 's/^[^:]+: *//;s/\r//')
+          [ -n "$session" ] || { echo "::error::initialize did not return an mcp-session-id"; exit 1; }
+          resp=$(curl -sf -X POST "$url" \
+            -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+            -H "mcp-session-id: $session" \
+            -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
           echo "$resp" | grep -q '"get_started"' || { echo "::error::tools/list missing get_started"; exit 1; }
           echo "smoke check passed"
