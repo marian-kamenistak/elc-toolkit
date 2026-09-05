@@ -137,7 +137,7 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"Compares a company's manager-vs-senior-IC split against the ELC community's own composition (69% Manager+/Leadership, 21% Senior/Staff IC, computed from 3,300+ CEE engineering leaders). Both counts are for the SAME population — senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs); leave out junior/mid ICs on both sides so the comparison is apples to apples. Returns each side's percentage, the delta from the peer baseline, and a verdict.",
+					"Describes a company's manager-vs-senior-IC split — each side's percentage, the resulting span (1 manager per N senior ICs), and the question that shape usually raises. Alongside it, for context rather than as a target, ELC's own community composition (69% Manager+/Leadership, 21% Senior/Staff IC across 3,300+ CEE engineering leaders — that is who joins a leadership community, not a survey of org structures, so there is deliberately no score against it). Count the SAME population on both sides: senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs), leaving out junior/mid ICs.",
 				inputSchema: {
 					managers: z
 						.number()
@@ -164,11 +164,19 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,300+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), goal-specific framing (hiring, brand awareness, product feedback, thought leadership), and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
+					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,300+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), the deliverables that actually serve the stated goal, where a proposed budget lands on the published ladder, and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
 				inputSchema: {
 					goal: z
 						.enum(PARTNERSHIP_GOALS)
-						.describe("The primary reason to partner with ELC"),
+						.describe(
+							"The primary reason to partner with ELC. One of: hiring, brand_awareness, product_feedback, thought_leadership, people_development (developing your own engineering leaders through mentoring and the Academy)",
+						),
+					buying_for: z
+						.enum(["company", "individual", "one_off"])
+						.optional()
+						.describe(
+							"Who is buying. 'company' (default) builds the annual membership case. 'individual' means a person spending their own money — returns the free-membership route, not an approval email. 'one_off' means one thing once rather than a year, and routes to the one-off menu.",
+						),
 					company_name: z
 						.string()
 						.optional()
@@ -177,8 +185,18 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 						.number()
 						.optional()
 						.describe(
-							"Optional: a proposed budget figure, if one exists yet, to frame the per-outcome bar against",
+							"Optional: a proposed budget figure, if one exists yet. 0 is a valid answer and routes to the free membership layer",
 						),
+					approver_name: z
+						.string()
+						.optional()
+						.describe(
+							"Optional: who the approval email is addressed to. Supplied, it is used in the greeting; omitted, the draft opens with a plain 'Hi,' rather than a placeholder",
+						),
+					sender_name: z
+						.string()
+						.optional()
+						.describe("Optional: who the approval email is signed by"),
 				},
 			},
 			async (input) => {
@@ -235,9 +253,9 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 const TOOL_DOCS: ToolDoc[] = [
 	{
 		name: "benchmark_leadership_ratio",
-		question: "Is my org's manager-to-senior-IC ratio healthy?",
+		question: "What shape is my org's manager-to-senior-IC split, and what should I ask about it?",
 		description:
-			"Compares your split against the ELC peer baseline (69% manager / 21% senior IC across 3,300+ CEE leaders), returns percentages, delta, and a verdict",
+			"Returns your percentages and span (1 manager per N senior ICs), the question that shape usually raises, and ELC's own community composition as context — not as a target to hit",
 	},
 	{
 		name: "build_partnership_business_case",

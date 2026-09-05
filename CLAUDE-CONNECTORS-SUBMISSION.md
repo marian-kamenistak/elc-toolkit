@@ -50,7 +50,7 @@ Leadership, partnership and launch benchmarks from ELC
 
 **MCP Server Description** (50-100 words, 80 used):
 ```
-ELC Toolkit gives your AI agent direct access to real data from Engineering Leaders Community: 3,100+ engineering leaders across Prague, Brno, Bratislava and Kraków. Three tools: a leadership-ratio benchmark comparing your org's manager-to-senior-IC split against ELC's own member composition, a partnership business-case builder with real reach numbers and a forwardable approval email, and a community-launch readiness test built from the actual playbook ELC used to open its Brno, Bratislava and Kraków chapters. No authentication, no data collection, no invented numbers.
+ELC Toolkit gives your AI agent direct access to real data from Engineering Leaders Community: 3,300+ engineering leaders across Prague, Brno, Bratislava and Kraków. Three tools: a leadership-ratio benchmark comparing your org's manager-to-senior-IC split against ELC's own member composition, a partnership business-case builder with real reach numbers and a forwardable approval email, and a community-launch readiness test built from the actual playbook ELC used to open its Brno, Bratislava and Kraków chapters. No authentication, no data collection, no invented numbers.
 ```
 
 **Authentication:** None (public, read-only, no user data touched)
@@ -98,7 +98,7 @@ docs (tool list, connect snippets), so this single URL satisfies both fields.
 > awareness. Draft something I can forward to get budget approved."
 >
 > What fires: `build_partnership_business_case` (goal: brand_awareness) → real reach numbers
-> (3,100+ members, 120+/meetup, 500+ conference attendees, 74% newsletter open rate) framed to
+> (3,300+ members, 120+/meetup, 500+ conference attendees, 74% newsletter open rate) framed to
 > that goal, plus a ready-to-send email.
 
 ## Pre-submission checklist (the actual failure points reviewers flag)
