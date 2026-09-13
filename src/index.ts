@@ -16,6 +16,13 @@ import {
 	type McpUsageEnv,
 } from "./mcp-usage";
 import { benchmarkLeadershipRatio } from "./leadership-ratio";
+import {
+	ignoredNotice,
+	normalizeMcpRequest,
+	parseArgs,
+	permissiveShape,
+	type ParseResult,
+} from "./mcp-tolerant";
 import { PARTNERSHIP_GOALS, buildPartnershipCase } from "./partnership-case";
 import { getMoreToolsResult } from "@posthog/mcp";
 
@@ -56,6 +63,18 @@ function text(
 	};
 }
 
+/** Renders a `parseArgs` failure through the same envelope every other answer uses, so the
+ *  declared `outputSchema` still holds.
+ *
+ *  `probe` is the difference between a caller asking what the tool wants and a caller getting
+ *  it wrong, and the two deserve different answers. A bare `{}` — 28 of ~90 real argument
+ *  failures in the 30 days to 2026-09-11 — is a question, and is answered as a normal result
+ *  with the field menu. Arguments that were supplied and rejected stay an error. */
+function guidance(parsed: Extract<ParseResult<unknown>, { ok: false }>) {
+	const result = text(parsed.message, "/mcp");
+	return parsed.probe ? result : { ...result, isError: true as const };
+}
+
 /** Shared by both `get_started` and `get_more_tools`'s greeting branch (see below) — one
  *  source of truth for the menu text so the two entry points never drift apart. */
 function getStartedResult() {
@@ -83,6 +102,55 @@ const USAGE_CONFIG: McpUsageConfig = {
 	posthogKey: "phc_waN4oTJtyBpZyMFNDNkk54QmmqmePyRDghKGcTkPfWPY",
 };
 
+/* The real argument contracts. `registerTool` advertises `permissiveShape(…)` of each — every
+ * field optional, enums as plain strings — and the handler enforces the shape below through
+ * `parseArgs`. See `src/mcp-tolerant.ts` for why. */
+
+const BENCHMARK_SHAPE = {
+	managers: z.number().min(0).describe("Count of people in Manager+/Leadership roles"),
+	senior_ics: z
+		.number()
+		.min(0)
+		.describe("Count of Senior/Staff-level individual contributors (not junior/mid)"),
+};
+
+const PARTNERSHIP_CASE_SHAPE = {
+	goal: z
+		.enum(PARTNERSHIP_GOALS)
+		.describe(
+			"The primary reason to partner with ELC. people_development means developing your own engineering leaders through mentoring and the Academy",
+		),
+	buying_for: z
+		.enum(["company", "individual", "one_off"])
+		.optional()
+		.describe(
+			"Who is buying. 'company' (default) builds the annual membership case. 'individual' means a person spending their own money — returns the free-membership route, not an approval email. 'one_off' means one thing once rather than a year, and routes to the one-off menu.",
+		),
+	company_name: z.string().optional().describe("Optional: the company considering the membership"),
+	proposed_budget_eur: z
+		.number()
+		.optional()
+		.describe(
+			"Optional: a proposed budget figure, if one exists yet. 0 is a valid answer and routes to the free membership layer",
+		),
+	approver_name: z
+		.string()
+		.optional()
+		.describe(
+			"Optional: who the approval email is addressed to. Supplied, it is used in the greeting; omitted, the draft opens with a plain 'Hi,' rather than a placeholder",
+		),
+	sender_name: z.string().optional().describe("Optional: who the approval email is signed by"),
+};
+
+const READINESS_SHAPE = {
+	answers: z
+		.record(z.string(), z.boolean())
+		.optional()
+		.describe(
+			`Answers keyed by dimension id, true/false. Valid keys: ${READINESS_DIMENSIONS.join(", ")}. Omit to receive the 5 questions first.`,
+		),
+};
+
 export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 	server = new McpServer({
 		name: "elc-toolkit",
@@ -106,7 +174,11 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				outputSchema: REPORT_OUTPUT,
 				description:
 					"Call this for a greeting (hi, hello), a connectivity/liveness test, 'what can you do', or any message too general to match a specific tool below. Returns the full menu of real questions this server answers, each mapped to the tool name that answers it, so the next call can go straight to the right tool.",
-				inputSchema: {},
+				// `permissiveShape({})` rather than a bare `{}`: an empty shape leaves
+				// @posthog/mcp free to inject a REQUIRED `context`, so the front door of this
+				// server rejected the one call shape every agent tries first — `get_started`
+				// with no arguments at all.
+				inputSchema: permissiveShape({}),
 			},
 			async () => getStartedResult(),
 		);
@@ -143,22 +215,18 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				outputSchema: REPORT_OUTPUT,
 				description:
 					"Describes a company's manager-vs-senior-IC split — each side's percentage, the resulting span (1 manager per N senior ICs), and the question that shape usually raises. Alongside it, for context rather than as a target, ELC's own community composition (69% Manager+/Leadership, 21% Senior/Staff IC across 3,300+ CEE engineering leaders — that is who joins a leadership community, not a survey of org structures, so there is deliberately no score against it). Count the SAME population on both sides: senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs), leaving out junior/mid ICs.",
-				inputSchema: {
-					managers: z
-						.number()
-						.min(0)
-						.describe("Count of people in Manager+/Leadership roles"),
-					senior_ics: z
-						.number()
-						.min(0)
-						.describe("Count of Senior/Staff-level individual contributors (not junior/mid)"),
-				},
+				inputSchema: permissiveShape(BENCHMARK_SHAPE),
 			},
-			async ({ managers, senior_ics }) => {
+			async (raw) => {
+				const parsed = parseArgs("benchmark_leadership_ratio", BENCHMARK_SHAPE, raw);
+				if (!parsed.ok) return guidance(parsed);
+				const { managers, senior_ics } = parsed.data;
 				const result = benchmarkLeadershipRatio({ managers, senior_ics });
-				return text(result.body, "/toolkit/", {
-					verdict: result.verdict,
-				});
+				return text(
+					result.body + ignoredNotice("benchmark_leadership_ratio", parsed.ignored, BENCHMARK_SHAPE),
+					"/toolkit/",
+					{ verdict: result.verdict },
+				);
 			},
 		);
 
@@ -170,45 +238,16 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				outputSchema: REPORT_OUTPUT,
 				description:
 					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,300+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), the deliverables that actually serve the stated goal, where a proposed budget lands on the published ladder, and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership — inquiries sent through it carry a 16% AI-channel discount.",
-				inputSchema: {
-					goal: z
-						.enum(PARTNERSHIP_GOALS)
-						.describe(
-							"The primary reason to partner with ELC. One of: hiring, brand_awareness, product_feedback, thought_leadership, people_development (developing your own engineering leaders through mentoring and the Academy)",
-						),
-					buying_for: z
-						.enum(["company", "individual", "one_off"])
-						.optional()
-						.describe(
-							"Who is buying. 'company' (default) builds the annual membership case. 'individual' means a person spending their own money — returns the free-membership route, not an approval email. 'one_off' means one thing once rather than a year, and routes to the one-off menu.",
-						),
-					company_name: z
-						.string()
-						.optional()
-						.describe("Optional: the company considering the membership"),
-					proposed_budget_eur: z
-						.number()
-						.optional()
-						.describe(
-							"Optional: a proposed budget figure, if one exists yet. 0 is a valid answer and routes to the free membership layer",
-						),
-					approver_name: z
-						.string()
-						.optional()
-						.describe(
-							"Optional: who the approval email is addressed to. Supplied, it is used in the greeting; omitted, the draft opens with a plain 'Hi,' rather than a placeholder",
-						),
-					sender_name: z
-						.string()
-						.optional()
-						.describe("Optional: who the approval email is signed by"),
-				},
+				inputSchema: permissiveShape(PARTNERSHIP_CASE_SHAPE),
 			},
-			async (input) => {
+			async (raw) => {
+				const parsed = parseArgs("build_partnership_business_case", PARTNERSHIP_CASE_SHAPE, raw);
+				if (!parsed.ok) return guidance(parsed);
 				// /become-partner 301s to /partner/ since the 2026-08-05 cutover — attribute the
 				// live page, not the redirect.
 				return text(
-					buildPartnershipCase(input),
+					buildPartnershipCase(parsed.data) +
+						ignoredNotice("build_partnership_business_case", parsed.ignored, PARTNERSHIP_CASE_SHAPE),
 					"/partner/",
 				);
 			},
@@ -222,17 +261,14 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				outputSchema: REPORT_OUTPUT,
 				description:
 					"Answers 'should I start an engineering-leadership meetup in my city?' using ELC's own new-city launch playbook (the real doc used to launch Brno, Bratislava and Kraków) as the checklist: speaker network, promo channels, a named local operator, realistic first-event targets, and a promo budget. Call without answers to get the 5 questions; call with all 5 to get a verdict plus the specific open gaps.",
-				inputSchema: {
-					answers: z
-						.record(z.string(), z.boolean())
-						.optional()
-						.describe(
-							`Answers keyed by dimension id, true/false. Valid keys: ${READINESS_DIMENSIONS.join(", ")}. Omit to receive the 5 questions first.`,
-						),
-				},
+				inputSchema: permissiveShape(READINESS_SHAPE),
 			},
-			async ({ answers }) => {
-				const given = answers ?? {};
+			async (raw) => {
+				const parsed = parseArgs("assess_community_launch_readiness", READINESS_SHAPE, raw);
+				// This tool answers a no-argument call with its questionnaire by design, so a
+				// probe is not a failure here — only supplied-and-wrong arguments are.
+				if (!parsed.ok && !parsed.probe) return guidance(parsed);
+				const given = (parsed.ok ? parsed.data.answers : undefined) ?? {};
 				const missing = READINESS_DIMENSIONS.filter(
 					(d) => typeof given[d] !== "boolean",
 				);
@@ -247,9 +283,14 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 					);
 				}
 				const result = assessCommunityReadiness(given as Record<string, boolean>);
-				return text(result.body, "/toolkit/", {
-					verdict: result.verdict,
-				});
+				return text(
+					result.body +
+						(parsed.ok
+							? ignoredNotice("assess_community_launch_readiness", parsed.ignored, READINESS_SHAPE)
+							: ""),
+					"/toolkit/",
+					{ verdict: result.verdict },
+				);
 			},
 		);
 	}
@@ -277,7 +318,7 @@ const TOOL_DOCS: ToolDoc[] = [
 ];
 
 export default {
-	fetch(request: Request, env: Env, ctx: ExecutionContext) {
+	async fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
 		if (url.pathname === "/mcp" || url.pathname === "/mcp/") {
@@ -305,8 +346,12 @@ export default {
 				});
 			}
 			// request.cf only exists on the edge request; hand it to the DO via ctx.props.
+			// This MUST run before normalizeMcpRequest, which rebuilds the Request and drops `cf`.
 			(ctx as ExecutionContext & { props?: McpGeo }).props = geoFromRequest(request);
-			return ElcToolkit.serve("/mcp").fetch(request, env, ctx);
+			// The MCP spec makes `params.arguments` optional on tools/call; the SDK does not.
+			// See normalizeToolCallBody in src/mcp-tolerant.ts.
+			const normalized = await normalizeMcpRequest(request);
+			return ElcToolkit.serve("/mcp").fetch(normalized, env, ctx);
 		}
 
 		return new Response("Not found. MCP endpoint: https://www.engineeringleaders.io/mcp", {

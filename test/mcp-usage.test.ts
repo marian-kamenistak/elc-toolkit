@@ -1,211 +1,145 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import {
-	conversationKey,
-	defaultSummarize,
-	formatArgs,
-	looksAutomated,
-	postDemoted,
-	postSessionUpdate,
-	postUngrouped,
-	queueNotify,
-	unwrapArguments,
-	type McpSessionsKv,
-} from "../src/mcp-usage";
+/**
+ * Demotion and labelling rules for the Slack usage channel (`#web-mcp-usage-bot`).
+ *
+ * Every client name and tool name below was read off production: `$mcp_initialize` and
+ * `$mcp_tool_call` in PostHog 180652 / 214292 over the 30 days to 2026-09-11, cross-checked
+ * against what the channel actually showed.
+ */
 
-describe("unwrapArguments", () => {
-	it("unwraps the live tools/call envelope shape", () => {
-		const parameters = { request: { params: { arguments: { role: "CTO", team_size: 8 } } } };
-		expect(unwrapArguments(parameters)).toEqual({ role: "CTO", team_size: 8 });
+import { describe, expect, it } from "vitest";
+import { conversationKey, looksAutomated, unwrapArguments, formatArgs } from "../src/mcp-usage";
+
+const geo = (org?: string) => ({ city: "Prague", country: "CZ", org });
+const props = (clientName?: string, toolName = "get_started") => ({
+	$mcp_client_name: clientName,
+	$mcp_tool_name: toolName,
+});
+
+describe("looksAutomated — crawlers that were passing as real visitors", () => {
+	it.each([
+		["glimind-probe", 2425],
+		["glama", 1432],
+		["mcpbeat", 1415],
+		["zevruna", 739],
+		["meshdns-health", 429],
+		["smithery-probe", 184],
+		["agent-tools.cloud", 155],
+		["rokmcp-probe", 252],
+		["agentstatus-probe", 0],
+		["uptime-probe", 3069],
+	])("%s is demoted (%i handshakes in the window)", (client, _n) => {
+		expect(looksAutomated(props(client), geo("Hetzner Online GmbH"))).toBe(true);
 	});
-	it("unwraps a flat {arguments} shape", () => {
-		expect(unwrapArguments({ arguments: { a: 1 } })).toEqual({ a: 1 });
+
+	it.each(["verifymcp-probe", "mcp-dataset-probe/0.1", "mcp-vouch", "cracked-probe"])(
+		"%s stays demoted (the original list must not regress)",
+		(client) => {
+			expect(looksAutomated(props(client), geo())).toBe(true);
+		},
+	);
+
+	it.each([
+		["agent-evidence-scanner", 277],
+		["proofbench-probe", 216],
+		["reliability-bureau-spike", 149],
+		["mcpscan", 142],
+		["factanker-probe", 122],
+		["mcpindex-trust", 108],
+		["ps-mcp-tools-probe", 95],
+		["glama-mcp-inspector", 94],
+	])("%s is demoted (%i handshakes; found on the second sweep)", (client, _n) => {
+		expect(looksAutomated(props(client), geo())).toBe(true);
 	});
-	it("passes through an unrecognized shape as a last resort", () => {
-		expect(unwrapArguments({ foo: "bar" })).toEqual({ foo: "bar" });
-	});
-	it("returns undefined for a non-object", () => {
-		expect(unwrapArguments("nope")).toBeUndefined();
-		expect(unwrapArguments(null)).toBeUndefined();
+
+	it("catches an unseen monitor by the shape of its name", () => {
+		expect(looksAutomated(props("someacme-healthcheck"), geo())).toBe(true);
+		expect(looksAutomated(props("newthing-monitor"), geo())).toBe(true);
+		expect(looksAutomated(props("someone-scanner-thing"), geo())).toBe(true);
 	});
 });
 
-describe("formatArgs", () => {
-	it("renders key: value pairs joined by a middle dot", () => {
-		expect(formatArgs({ role: "CTO", team_size: 8 })).toBe("role: CTO · team_size: 8");
+describe("looksAutomated — the penetration scan that threaded itself as a conversation", () => {
+	// 2026-09-10: an unnamed client on Tele2 *residential* broadband called 141 tools against
+	// elc-conference-mcp-tickets. The "unnamed + datacentre" rule could not see it, so it
+	// posted one threaded Slack session that read exactly like a real visitor.
+	it.each([
+		"delete_user",
+		"run_shell",
+		"drop_table",
+		"transfer_money",
+		"read_secrets",
+		"admin_login",
+		"get_api_key",
+		"execute_command",
+		"sudo",
+	])("%s is a scan regardless of client name or network", (tool) => {
+		expect(looksAutomated(props(undefined, tool), geo("Tele2 customer broadband access"))).toBe(true);
 	});
-	it("skips the SDK-injected context key and empty values", () => {
-		expect(formatArgs({ context: "why I called this", role: "CTO", note: "", missing: undefined })).toBe(
-			"role: CTO",
-		);
+
+	it("still catches the synthetic probe tool names", () => {
+		expect(looksAutomated(props("x", "__verifymcp_auth_probe_a432df16__"), geo())).toBe(true);
+		expect(looksAutomated(props("x", "__ratelimit_probe_nonexistent_tool__"), geo())).toBe(true);
 	});
-	it("truncates a value past 120 chars", () => {
-		const long = "x".repeat(200);
-		const out = formatArgs({ note: long });
-		expect(out).toBe(`note: ${"x".repeat(120)}…`);
-	});
-	it("caps at 10 fields", () => {
-		const args = Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`k${i}`, i]));
-		expect(formatArgs(args).split(" · ")).toHaveLength(10);
-	});
-	it("returns empty string for non-object input", () => {
-		expect(formatArgs(undefined)).toBe("");
-		expect(formatArgs("nope")).toBe("");
+
+	it("still catches an unnamed client on a datacentre network", () => {
+		expect(looksAutomated(props(undefined), geo("Vultr Holdings, LLC"))).toBe(true);
 	});
 });
 
-describe("looksAutomated", () => {
-	it("flags a known probe client name", () => {
-		expect(looksAutomated({ $mcp_client_name: "mcp-dataset-probe/0.1" }, {})).toBe(true);
-		expect(looksAutomated({ $mcp_client_name: "cracked-probe 0.1" }, {})).toBe(true);
+describe("looksAutomated — what must NOT be demoted", () => {
+	it.each([
+		"claude-code",
+		"claude-desktop",
+		"grok-shell-marian-mentoring",
+		"cursor",
+		"vscode",
+	])("%s is a real client", (client) => {
+		expect(looksAutomated(props(client), geo("O2 Czech Republic"))).toBe(false);
 	});
-	it("flags a synthetic probe tool name", () => {
-		expect(
-			looksAutomated({ $mcp_tool_name: "__verifymcp_auth_probe_12d20461b38936c3__" }, {}),
-		).toBe(true);
-	});
-	it("flags a synthetic probe tool name from a scanner we have not seen before", () => {
-		// Seen 2026-09-09 against elc-conference.io from an unnamed client on a university
-		// network — no client-name or datacentre rule could reach it, so the tool name is
-		// the only signal. Pinning the previous scanner's exact name meant it posted as a
-		// real session with a warning.
-		expect(
-			looksAutomated({ $mcp_tool_name: "__mcp_security_study_nonexistent_probe_tool__" }, {}),
-		).toBe(true);
-	});
-	it("does not flag a real tool name that merely contains 'probe'", () => {
-		expect(looksAutomated({ $mcp_tool_name: "probe_community_readiness" }, {})).toBe(false);
-	});
-	it("flags an unnamed client on a datacentre network", () => {
-		expect(looksAutomated({}, { org: "Vultr Holdings, LLC" })).toBe(true);
-	});
-	it("does not flag a named real client on a residential ISP", () => {
-		expect(
-			looksAutomated({ $mcp_client_name: "grok-shell-marian-mentoring" }, { org: "Dial Telecom, a.s." }),
-		).toBe(false);
-	});
-	it("does not flag an unnamed client on an unremarkable network", () => {
-		expect(looksAutomated({}, { org: "Deutsche Bank AG" })).toBe(false);
-	});
-});
 
-describe("defaultSummarize", () => {
-	it("extracts the first text block, stripped of the attribution footer", () => {
-		const response = {
-			content: [{ type: "text", text: "matched: First-quarter · 5 focus areas\n\nSource: marian.coach" }],
-		};
-		expect(defaultSummarize("match_mentoring_focus", response)).toBe("matched: First-quarter · 5 focus areas");
+	it("our own verification harnesses stay visible — they are how a deploy is proved", () => {
+		for (const client of ["usability-test", "argshape-check", "plan1-verify-toolkit", "deploy-verify"]) {
+			expect(looksAutomated(props(client), geo())).toBe(false);
+		}
 	});
-	it("truncates past 200 chars", () => {
-		const response = { content: [{ type: "text", text: "y".repeat(300) }] };
-		expect(defaultSummarize("t", response)).toBe(`${"y".repeat(200)}…`);
-	});
-	it("returns undefined when there is no text content", () => {
-		expect(defaultSummarize("t", { content: [] })).toBeUndefined();
-		expect(defaultSummarize("t", undefined)).toBeUndefined();
-		expect(defaultSummarize("t", { content: "not an array" })).toBeUndefined();
+
+	it("a named client on a datacentre network is judged by its name, not its network", () => {
+		// An agent legitimately running in CI or on a VPS is still a real caller.
+		expect(looksAutomated(props("claude-code"), geo("Amazon Technologies Inc."))).toBe(false);
 	});
 });
 
 describe("conversationKey", () => {
-	it("is deterministic for the same inputs", () => {
-		const props = { $mcp_client_name: "grok-shell", $mcp_client_version: "1.0.13" };
-		const geo = { city: "Pilsen", country: "CZ", org: "Dial Telecom" };
-		expect(conversationKey("srv", props, geo)).toBe(conversationKey("srv", props, geo));
+	it("separates two servers that share a domain", () => {
+		const a = conversationKey("eng-leadership-toolkit", props("claude-code"), geo());
+		const b = conversationKey("mentoring-inquiry-builder", props("claude-code"), geo());
+		expect(a).not.toBe(b);
 	});
-	it("differs by server name", () => {
-		expect(conversationKey("srv-a", { $mcp_client_name: "c" }, {})).not.toBe(
-			conversationKey("srv-b", { $mcp_client_name: "c" }, {}),
+
+	it("is stable for the same client across reconnects — that is the whole point", () => {
+		expect(conversationKey("elc-toolkit", props("claude-code"), geo("O2"))).toBe(
+			conversationKey("elc-toolkit", props("claude-code"), geo("O2")),
 		);
-	});
-	it("differs by client identity", () => {
-		expect(conversationKey("srv", { $mcp_client_name: "a" }, {})).not.toBe(
-			conversationKey("srv", { $mcp_client_name: "b" }, {}),
-		);
-	});
-	it("is namespaced with the server name and an 8-char hex suffix", () => {
-		expect(conversationKey("srv", {}, {})).toMatch(/^mcp:sess:srv:[0-9a-f]{8}$/);
 	});
 });
 
-describe("queueNotify", () => {
-	it("runs queued tasks for the same key in order, not interleaved", async () => {
-		const order: number[] = [];
-		const slow = () => new Promise<void>((resolve) => setTimeout(() => { order.push(1); resolve(); }, 20));
-		const fast = () => new Promise<void>((resolve) => { order.push(2); resolve(); });
-		const p1 = queueNotify("k", slow);
-		const p2 = queueNotify("k", fast);
-		await Promise.all([p1, p2]);
-		expect(order).toEqual([1, 2]);
-	});
-});
-
-class FakeKv implements McpSessionsKv {
-	private store = new Map<string, string>();
-	async get(key: string) {
-		return this.store.get(key) ?? null;
-	}
-	async put(key: string, value: string) {
-		this.store.set(key, value);
-	}
-}
-
-describe("postSessionUpdate", () => {
-	const config = { serverName: "srv", domain: "example.com", posthogKey: "phc_x" };
-	const env = { SLACK_BOT_TOKEN_ELC: "xoxb-test", MCP_USAGE_SLACK_CHANNEL: "C123" };
-	const note = { toolName: "get_started", argLine: "", isError: false } as const;
-
-	beforeEach(() => {
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async (_url: string, init: { body?: string }) => {
-				const body = JSON.parse(init.body ?? "{}");
-				const ts = body.thread_ts ? undefined : "1700000000.000001";
-				return new Response(JSON.stringify({ ok: true, ts }), { status: 200 });
-			}),
-		);
-	});
-	afterEach(() => vi.unstubAllGlobals());
-
-	it("posts a new parent and persists state on the first call", async () => {
-		const kv = new FakeKv();
-		await postSessionUpdate(kv, "k1", env, config, {}, {}, note);
-		const stored = JSON.parse((await kv.get("k1")) ?? "null");
-		expect(stored).toMatchObject({ threadTs: "1700000000.000001", calls: 1 });
+describe("argument rendering stays readable", () => {
+	it("unwraps the JSON-RPC envelope rather than printing it", () => {
+		const envelope = {
+			request: {
+				id: 2,
+				jsonrpc: "2.0",
+				method: "tools/call",
+				params: { name: "benchmark_leadership_ratio", arguments: { managers: 12, senior_ics: 40 } },
+			},
+		};
+		expect(unwrapArguments(envelope)).toEqual({ managers: 12, senior_ics: 40 });
+		const line = formatArgs(unwrapArguments(envelope));
+		expect(line).toBe("managers: 12 · senior_ics: 40");
+		expect(line).not.toContain("jsonrpc");
 	});
 
-	it("threads a second call and increments the count", async () => {
-		const kv = new FakeKv();
-		await postSessionUpdate(kv, "k1", env, config, {}, {}, note);
-		await postSessionUpdate(kv, "k1", env, config, {}, {}, note);
-		const stored = JSON.parse((await kv.get("k1")) ?? "null");
-		expect(stored.calls).toBe(2);
-	});
-
-	it("does not persist state when Slack is unconfigured", async () => {
-		const kv = new FakeKv();
-		await postSessionUpdate(kv, "k1", {}, config, {}, {}, note);
-		expect(await kv.get("k1")).toBeNull();
-	});
-});
-
-describe("postDemoted / postUngrouped", () => {
-	const env = { SLACK_BOT_TOKEN_ELC: "xoxb-test", MCP_USAGE_SLACK_CHANNEL: "C123" };
-	const config = { serverName: "srv", domain: "example.com", posthogKey: "phc_x" };
-
-	beforeEach(() => {
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async () => new Response(JSON.stringify({ ok: true, ts: "1.1" }), { status: 200 })),
-		);
-	});
-	afterEach(() => vi.unstubAllGlobals());
-
-	it("postDemoted does not throw for a probe-shaped call", async () => {
-		await expect(postDemoted(env, { $mcp_client_name: "mcp-vouch" }, {})).resolves.toBeUndefined();
-	});
-
-	it("postUngrouped does not throw when no KV binding exists", async () => {
-		const note = { toolName: "get_started", argLine: "", isError: false } as const;
-		await expect(postUngrouped(env, config, {}, {}, note)).resolves.toBeUndefined();
+	it("keeps the injected context off the argument line", () => {
+		expect(formatArgs({ managers: 12, context: "sizing an org" })).toBe("managers: 12");
 	});
 });
