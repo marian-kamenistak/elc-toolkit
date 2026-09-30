@@ -311,7 +311,7 @@ export function buildPartnershipCase(input: PartnershipCaseInput): string {
 - ${ELC_FACTS.membersLabel} members: CTOs, VPs of Engineering, engineering managers across ${andJoin(ELC_FACTS.cities)}
 - ${ELC_FACTS.meetupAttendance}+ people in the room per meetup, ${ELC_FACTS.meetupsPerYear} meetups a year, running since ${ELC_FACTS.founded}
 - ${ELC_FACTS.conferenceAttendees}+ at the annual conference (editions held: ${ELC_FACTS.conferenceEditions.join(", ")}; next: ${ELC_FACTS.nextConference})
-- ${ELC_FACTS.newsletterSubscribers.toLocaleString()}+ newsletter subscribers at a ${ELC_FACTS.newsletterOpenRate}% open rate, measured by ELC on its own sends (no external benchmark is claimed here)`;
+- ${ELC_FACTS.newsletterSubscribers.toLocaleString()}+ newsletter subscribers, ${ELC_FACTS.newsletterOpensPerIssue.toLocaleString()}+ of them open every issue (${ELC_FACTS.newsletterOpenRate}% over the last 7 sends, measured by ELC on its own sends, no external benchmark is claimed here)`;
 
 	const goalFraming = GOAL_FRAMING[input.goal];
 

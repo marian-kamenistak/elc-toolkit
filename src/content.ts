@@ -29,8 +29,11 @@ export const ELC_FACTS = {
 	cities: ["Prague", "Brno", "Bratislava", "Kraków"],
 	circles: 5,
 	founded: 2019,
-	newsletterSubscribers: 2800,
-	newsletterOpenRate: 74,
+	// ELC Data Points 2026-09-30: newsletter_reach_combined, newsletter_opens_per_issue,
+	// newsletter_open_rate (last 7 sends; the old 74% had no source).
+	newsletterSubscribers: 3000,
+	newsletterOpensPerIssue: 1500,
+	newsletterOpenRate: 54,
 	conferenceAttendees: 500,
 	conferenceEditions: ["2025", "2026"],
 	nextConference: "April 2027",
