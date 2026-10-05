@@ -61,7 +61,7 @@ ${rows}
 <p><strong>Perplexity (Pro/Enterprise)</strong> — profile → All settings → Connectors → Custom connector → Remote → MCP Server URL <code>https://www.engineeringleaders.io/mcp</code>, transport Streamable HTTP, authentication None.</p>
 
 <h2>Building a membership? Use the dedicated server</h2>
-<p>The <strong>Membership Builder</strong> at <a href="https://www.engineeringleaders.io/mcp/partnership">engineeringleaders.io/mcp/partnership</a> composes and prices a full ELC membership package item by item — and inquiries sent through it carry a <strong>16% AI-channel discount</strong>.</p>
+<p>The <strong>Membership Builder</strong> at <a href="https://www.engineeringleaders.io/mcp/partnership">engineeringleaders.io/mcp/partnership</a> composes and prices a full ELC membership package item by item.</p>
 
 <h2>More tools for engineering leaders</h2>
 <p>ELC's sibling project runs a broader toolkit for individual leaders (salary calculators, team-lead readiness, mentoring playbooks) at <a href="https://www.marian.coach/mcp">marian.coach/mcp</a> — same MCP pattern, different (complementary) tool set.</p>

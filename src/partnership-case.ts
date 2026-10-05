@@ -8,8 +8,8 @@
  * corrected 2026-08-08): the full priced ladder renders on
  * /partner/membership/ and ships machine-readable at /partner/offer-catalog.json.
  * This tool states the published range and routes exact composition to the
- * dedicated Partnership Builder MCP server (/mcp/partnership), which also
- * carries the 16% AI-channel discount. Only the RANGE is stated here — per-item
+ * dedicated Partnership Builder MCP server (/mcp/partnership); no AI-channel
+ * discount since 2026-10-05. Only the RANGE is stated here — per-item
  * prices live in the synced catalog that server reads, not in a third copy
  * that would drift.
  *
@@ -318,7 +318,7 @@ export function buildPartnershipCase(input: PartnershipCaseInput): string {
 	const deliverablesBlock = `What this actually buys for this goal:
 ${GOAL_DELIVERABLES[input.goal].map((d) => `- ${d}`).join("\n")}
 
-Which of those to take, and what each costs, is composed item by item at https://www.engineeringleaders.io/partner/membership/ — or through the Membership Builder MCP server (https://www.engineeringleaders.io/mcp/partnership), where inquiries carry a 16% AI-channel discount.`;
+Which of those to take, and what each costs, is composed item by item at https://www.engineeringleaders.io/partner/membership/ — or through the Membership Builder MCP server (https://www.engineeringleaders.io/mcp/partnership).`;
 
 	/**
 	 * The per-outcome bar, phrased for the goal. The old shared sentence offered "one hire, one
