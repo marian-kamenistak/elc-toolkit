@@ -209,7 +209,9 @@ export interface Month {
 
 export interface CareerPathResult {
 	path: CareerPath;
+	/** First runner-up within one point; `runnerUps` holds all of them (a three-way tie has two). */
 	runnerUp?: CareerPath;
+	runnerUps: CareerPath[];
 	deadZone: boolean;
 	gaps: Check[];
 	months: Month[];
@@ -237,7 +239,8 @@ export function planCareerPath(input: CareerPathAnswers): CareerPathResult {
 	// Stable order on ties: PATHS order, so the result never depends on object iteration quirks.
 	const ranked = [...PATHS].sort((x, y) => s[y] - s[x]);
 	const path = ranked[0];
-	const runnerUp = s[ranked[0]] - s[ranked[1]] <= 1 ? ranked[1] : undefined;
+	const runnerUps = ranked.slice(1).filter((p) => s[path] - s[p] <= 1);
+	const runnerUp = runnerUps[0];
 
 	const deadZone = a.people_led <= 10 && a.hands_on_hours_per_week < 2;
 
@@ -273,17 +276,22 @@ export function planCareerPath(input: CareerPathAnswers): CareerPathResult {
 	});
 
 	const role = input.current_role?.trim();
-	const verdict = `${info.name}: ${info.target}${runnerUp ? ` (close call with ${PATH_INFO[runnerUp].name})` : ""}`;
+	const verdict = `${info.name}: ${info.target}${runnerUps.length ? ` (close call with ${runnerUps.map((p) => PATH_INFO[p].name).join(" and ")})` : ""}`;
 
 	const lines: string[] = [];
 	lines.push(`**Your path: ${info.name}.** ${info.target}.`);
 	lines.push(
 		`${role ? `From ${role}, with` : "With"} ${a.people_led} people led and ${a.hands_on_hours_per_week} hands-on ${a.hands_on_hours_per_week === 1 ? "hour" : "hours"} a week. ${info.why}`,
 	);
-	if (runnerUp) {
-		const key = [path, runnerUp].sort().join("|");
+	if (path === "grow_up" && a.people_led >= 20) {
 		lines.push(
-			`**Close call** with ${PATH_INFO[runnerUp].name} (${PATH_INFO[runnerUp].target}). The question that decides it: ${DECIDER[key]}`,
+			`You already run ${a.people_led} people, so this path is about keeping the seat as the job changes: more coordination per week, with AI doing the routine parts.`,
+		);
+	}
+	for (const r of runnerUps) {
+		const key = [path, r].sort().join("|");
+		lines.push(
+			`**Close call** with ${PATH_INFO[r].name} (${PATH_INFO[r].target}). The question that decides it: ${DECIDER[key]}`,
 		);
 	}
 	if (deadZone) {
@@ -317,5 +325,5 @@ export function planCareerPath(input: CareerPathAnswers): CareerPathResult {
 		"Built from ELC meetup #43, \"The Standard Tech/Engineering Manager Role Is Dead. How You Survive 2027\", with Yurii Bliuchak (Apify), Jan Vrtiska (Everpure) and Robert Jacko (Applifting).",
 	);
 
-	return { path, runnerUp, deadZone, gaps, months, verdict, body: lines.join("\n\n") };
+	return { path, runnerUp, runnerUps, deadZone, gaps, months, verdict, body: lines.join("\n\n") };
 }

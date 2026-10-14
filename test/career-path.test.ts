@@ -58,6 +58,35 @@ describe("path pick", () => {
 	});
 });
 
+describe("edge cases found in live testing 2026-10-14", () => {
+	it("names every path within one point, not just the first", () => {
+		// customers (3) vs 20+ people (2) vs 10+ hands-on hours (2)
+		const r = planCareerPath({
+			...BASE,
+			energy: "customers_and_product",
+			people_led: 20,
+			hands_on_hours_per_week: 10,
+			product: "no",
+			beyond_engineering: "no",
+		});
+		expect(r.path).toBe("go_product");
+		expect(r.body).toContain("Grow up");
+		expect(r.body).toContain("Go deep");
+		expect(r.body.match(/The question that decides it/g)).toHaveLength(2);
+	});
+
+	it("tells someone already running 20+ people that they are on the path, not aiming at it", () => {
+		const r = planCareerPath({ ...BASE, people_led: 40, hands_on_hours_per_week: 0, current_role: "VP Engineering" });
+		expect(r.path).toBe("grow_up");
+		expect(r.body).toContain("already");
+	});
+
+	it("does not say 'already' to a small-team manager on the grow-up path", () => {
+		const r = planCareerPath({ ...BASE, people_led: 8, hands_on_hours_per_week: 0 });
+		expect(r.body).not.toContain("You already run");
+	});
+});
+
 describe("dead zone", () => {
 	it("warns a small-team manager who no longer builds", () => {
 		const r = planCareerPath({ ...BASE, people_led: 7, hands_on_hours_per_week: 0 });
