@@ -7,6 +7,13 @@ import {
 	assessCommunityReadiness,
 	readinessQuestionnaireText,
 } from "./community-readiness";
+import {
+	CHECK_ANSWERS,
+	ENERGIES,
+	careerPathQuestionnaireText,
+	missingCareerAnswers,
+	planCareerPath,
+} from "./career-path";
 import { docsHtml, type ToolDoc } from "./docs";
 import {
 	geoFromRequest,
@@ -151,6 +158,32 @@ const READINESS_SHAPE = {
 		),
 };
 
+const CHECK = z.enum(CHECK_ANSWERS);
+
+const CAREER_PATH_SHAPE = {
+	current_role: z.string().optional().describe("Optional: the person's current title, e.g. 'Engineering Manager'"),
+	energy: z
+		.enum(ENERGIES)
+		.optional()
+		.describe(
+			"What gave them energy in their best week: people_and_org, building_systems, or customers_and_product",
+		),
+	people_led: z.number().min(0).optional().describe("People they lead today, direct and indirect"),
+	hands_on_hours_per_week: z
+		.number()
+		.min(0)
+		.optional()
+		.describe("Hours a week they build themselves: code, architecture, prototypes, agents"),
+	product: CHECK.optional().describe("Do they know their product as well as their code? yes / not_sure / no"),
+	self_management: CHECK.optional().describe(
+		"Did they set this week's priorities themselves (yes) or did the calendar (no)? yes / not_sure / no",
+	),
+	ai: CHECK.optional().describe("Has their team shipped something it had never built before? yes / not_sure / no"),
+	beyond_engineering: CHECK.optional().describe(
+		"Do they know how their feature is marketed, sold and supported? yes / not_sure / no",
+	),
+};
+
 export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 	server = new McpServer({
 		name: "elc-toolkit",
@@ -293,10 +326,48 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				);
 			},
 		);
+
+		this.server.registerTool(
+			"plan_leadership_career_path",
+			{
+				title: "Engineering leader career path + 6-month plan (the EM role is changing)",
+				annotations: { ...READ_ONLY },
+				outputSchema: REPORT_OUTPUT,
+				description:
+					"For an engineering manager, team lead or tech lead asking 'what is my next role?', 'is the engineering manager role dead?', 'should I become a director or go back to IC?', or 'how do I stay valuable on the market in the AI era?'. Picks one of three paths from ELC meetup #43: Grow up (Director/Head of, 20+ people), Go deep (Staff/Principal AI engineer) or Go product (product builder), flags the one-team EM 'dead zone', runs the four 2027 checks (product, self-management, AI, beyond engineering) and returns a month-by-month 6-month plan with a proof artifact per month. Call with no arguments to get the 7 questions; ask them one at a time, then call again with all answers.",
+				inputSchema: permissiveShape(CAREER_PATH_SHAPE),
+			},
+			async (raw) => {
+				const parsed = parseArgs("plan_leadership_career_path", CAREER_PATH_SHAPE, raw);
+				if (!parsed.ok && !parsed.probe) return guidance(parsed);
+				const given = parsed.ok ? parsed.data : {};
+				const missing = missingCareerAnswers(given);
+				if (missing.length > 0) {
+					const intro =
+						missing.length === 7
+							? "Career path + 6-month plan for engineering leaders. 7 questions. Ask them one at a time, in the user's words, then call again with every key filled."
+							: `Still missing: ${missing.join(", ")}. All 7 are needed before the plan.`;
+					return text(`${intro}\n\n${careerPathQuestionnaireText()}`, "/toolkit/career-path/");
+				}
+				const result = planCareerPath(given);
+				return text(
+					result.body +
+						(parsed.ok ? ignoredNotice("plan_leadership_career_path", parsed.ignored, CAREER_PATH_SHAPE) : ""),
+					"/toolkit/career-path/",
+					{ verdict: result.verdict },
+				);
+			},
+		);
 	}
 }
 
 const TOOL_DOCS: ToolDoc[] = [
+	{
+		name: "plan_leadership_career_path",
+		question: "The engineering manager role is changing. Which path is mine, and what do I do in the next 6 months?",
+		description:
+			"7 questions, then one of three paths (Grow up, Go deep, Go product), the four 2027 checks, and a month-by-month plan with a proof per month. Built from ELC meetup #43",
+	},
 	{
 		name: "benchmark_leadership_ratio",
 		question: "What shape is my org's manager-to-senior-IC split, and what should I ask about it?",

@@ -22,6 +22,7 @@ Open in a browser instead: [The ELC Toolkit](https://www.engineeringleaders.io/t
 | --- | --- |
 | `benchmark_leadership_ratio` | Is my org's manager-to-senior-IC ratio healthy? Compares your split against the ELC peer baseline (69% manager / 21% senior IC across 3,300+ CEE leaders) |
 | `build_partnership_business_case` | How do I justify a partnership budget for ELC internally? Real reach numbers, goal-specific framing, and a forwardable approval email — no invented pricing |
+| `plan_leadership_career_path` | The engineering manager role is changing. Which path is mine, and what do I do in the next 6 months? 7 questions, one of three paths (Grow up, Go deep, Go product), and a month-by-month plan with a proof per month. Built from ELC meetup #43 |
 | `assess_community_launch_readiness` | Should I start an engineering-leadership meetup in my city? 5-question readiness check straight from ELC's own new-city launch playbook |
 
 ## Connect

@@ -2,14 +2,14 @@
 
 ## What this is
 Remote, authless MCP server for the **elc** stream, live at `https://www.engineeringleaders.io/mcp`
-(docs page at the same URL in a browser; human page at `/toolkit/`). Five tools: `get_started`
+(docs page at the same URL in a browser; human page at `/toolkit/`). Six tools: `get_started`
 (routes a greeting/test/unclear message to the right tool below), `get_more_tools` (a real
 registration, 2026-09-04 — overrides `@posthog/mcp`'s auto-injected virtual tool of the same
 name so a bare "hi"/"test"/"hello" ping gets the get_started menu instead of a canned "we
 noted your feedback" dead end; a real capability report still falls through unchanged) plus
 three backed by ELC's own member data — `benchmark_leadership_ratio`,
 `build_partnership_business_case`, `assess_community_launch_readiness`. Listed in registries
-(`server.json`, `mcp.json`).
+(`server.json`, `mcp.json`). Sixth tool since 2026-10-14: `plan_leadership_career_path` (`src/career-path.ts`), career path + 6-month plan built from meetup #43; human page `/toolkit/career-path/`, skill `/.well-known/agent-skills/engineering-leader-career-path/SKILL.md` in elc-web.
 
 ## Stack
 - Cloudflare Worker + Durable Object `ElcToolkit` (`MCP_OBJECT`), `McpAgent` from `agents` ^0.17, streamable HTTP
@@ -21,7 +21,7 @@ three backed by ELC's own member data — `benchmark_leadership_ratio`,
 ```bash
 # dev:    npm run dev
 # build:  npm run type-check
-# test:   none — no test script; use /ai-mcp-test for persona runs
+# test:   npm test (vitest; CI runs it before deploy); /ai-mcp-test for persona runs
 # deploy: set -a && source ~/.env && set +a && npm run deploy
 ```
 
@@ -36,7 +36,7 @@ three backed by ELC's own member data — `benchmark_leadership_ratio`,
 ## Definition of done
 - [ ] `npm run type-check` exits 0
 - [ ] `wrangler deploy` exits 0
-- [ ] `curl -s -X POST https://www.engineeringleaders.io/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'` returns **5** — the 5 tools above, `get_more_tools` included exactly once
+- [ ] `curl -s -X POST https://www.engineeringleaders.io/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'` returns **6** — the 6 tools above, `get_more_tools` included exactly once
 - [ ] `GET https://www.engineeringleaders.io/mcp` (browser Accept) returns 200 HTML docs page
 - [ ] `wrangler tail --format json` for 60s: zero `console.error`, zero exceptions
 - [ ] Route precedence unchanged: `/mcp/partnership` still lands on `elc-partnership-builder`
