@@ -334,7 +334,7 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				annotations: { ...READ_ONLY },
 				outputSchema: REPORT_OUTPUT,
 				description:
-					"For an engineering manager, team lead or tech lead asking 'what is my next role?', 'is the engineering manager role dead?', 'should I become a director or go back to IC?', or 'how do I stay valuable on the market in the AI era?'. Picks one of three paths from ELC meetup #43: Grow up (Director/Head of, 20+ people), Go deep (Staff/Principal AI engineer) or Go product (product builder), flags the one-team EM 'dead zone', runs the four 2027 checks (product, self-management, AI, beyond engineering) and returns a month-by-month 6-month plan with a proof artifact per month. Call with no arguments to get the 7 questions; ask them one at a time, then call again with all answers.",
+					"For an engineering manager, team lead or tech lead asking 'what is my next role?', 'is the engineering manager role dead?', 'should I become a director or go back to IC?', or 'how do I stay valuable on the market in the AI era?'. Picks one of three paths from ELC meetup #43: Grow up (Director/Head of, 20+ people), Go deep (Staff/Principal AI engineer) or Go product (product builder), checks the 'dead zone' (10 or fewer people led AND under 2 hands-on hours a week; the tool decides this, report its verdict rather than inferring one), runs the four 2027 checks (product, self-management, AI, beyond engineering) and returns a month-by-month 6-month plan with a proof artifact per month. Call with no arguments to get the 7 questions; ask them one at a time, then call again with all answers.",
 				inputSchema: permissiveShape(CAREER_PATH_SHAPE),
 			},
 			async (raw) => {

@@ -294,6 +294,11 @@ export function planCareerPath(input: CareerPathAnswers): CareerPathResult {
 			`**Close call** with ${PATH_INFO[r].name} (${PATH_INFO[r].target}). The question that decides it: ${DECIDER[key]}`,
 		);
 	}
+	if (!deadZone && a.people_led <= 10) {
+		lines.push(
+			`Dead zone check: clear. You lead ${a.people_led} people but still build ${a.hands_on_hours_per_week} ${a.hands_on_hours_per_week === 1 ? "hour" : "hours"} a week, so you are not the one-team EM who stopped building.`,
+		);
+	}
 	if (deadZone) {
 		lines.push(
 			`**Dead zone check.** You lead ${a.people_led} people and build less than 2 hours a week. That is the one-team EM role the #43 speakers called the first to go. It is not a verdict on you, it is a deadline: pick a path this quarter and start month 1 now.`,

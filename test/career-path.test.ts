@@ -101,6 +101,18 @@ describe("dead zone", () => {
 	it("does not warn a hands-on lead", () => {
 		expect(planCareerPath({ ...BASE, people_led: 6, hands_on_hours_per_week: 12 }).deadZone).toBe(false);
 	});
+
+	it("says explicitly that a small-team lead who still builds is clear of the dead zone", () => {
+		// Live test 2026-10-14: a client model told a 5-person tech lead coding 12h/week he was in
+		// the dead zone, because the output was silent and the description named the term.
+		const r = planCareerPath({ ...BASE, people_led: 5, hands_on_hours_per_week: 12 });
+		expect(r.body).toContain("Dead zone check: clear");
+		expect(r.body).not.toContain("**Dead zone check.**");
+	});
+
+	it("says nothing about the dead zone to a big-org leader", () => {
+		expect(planCareerPath({ ...BASE, people_led: 30 }).body).not.toContain("Dead zone");
+	});
 });
 
 describe("gaps and plan", () => {
