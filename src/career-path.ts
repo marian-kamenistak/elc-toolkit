@@ -321,7 +321,7 @@ export function planCareerPath(input: CareerPathAnswers): CareerPathResult {
 	});
 
 	lines.push(
-		`**If you want help on the way.** AI Program at the ELC Academy: start with AI Augmented (${SITE}/academy/ai-augmented), then ${info.academy.name} for this path (${info.academy.url}). A mentor who has done this path: ${SITE}/mentor/. Upcoming meetups: ${SITE}/events/`,
+		`**If you want help on the way.** B² (Builders for Builders) at the ELC Academy, taught by people who build with AI in their own companies: start with AI Augmented (${SITE}/academy/ai-augmented), then ${info.academy.name} for this path (${info.academy.url}). A mentor who has done this path: ${SITE}/mentor/. Upcoming meetups: ${SITE}/events/`,
 	);
 	lines.push(
 		"**Last question** (Robert Jacko, Applifting): what is your superpower? Write it in one line on top of this plan. Every month should use it.",

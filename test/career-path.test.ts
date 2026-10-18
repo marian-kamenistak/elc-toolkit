@@ -146,7 +146,9 @@ describe("gaps and plan", () => {
 		expect(withGap.map((m) => m.gap)).toEqual(["product", "self_management", "ai", "beyond_engineering"]);
 	});
 
-	it("links the AI Program track that fits the path", () => {
+	it("links the B² track that fits the path", () => {
+		expect(planCareerPath(BASE).body).toContain("B² (Builders for Builders) at the ELC Academy");
+		expect(planCareerPath(BASE).body).not.toContain("AI Program");
 		expect(planCareerPath({ ...BASE, people_led: 30 }).body).toContain("/academy/ai-managers");
 		expect(planCareerPath({ ...BASE, energy: "building_systems" }).body).toContain("/academy/ai-masters");
 	});
