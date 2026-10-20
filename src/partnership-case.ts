@@ -54,7 +54,7 @@ const GOAL_FRAMING: Record<PartnershipGoal, string> = {
 	// published figure traces to the Data Points registry; this one did not. The percentage is
 	// a contract term the reader can verify in their own paperwork, so point them at that
 	// instead of inventing a euro range on their behalf.
-	hiring: `Contingency recruiter fees are set as a percentage of first-year salary — your own agency agreements will state yours, and it is usually the largest single line in a senior hire. Multiply your rate by one senior engineering salary and compare that to a year of membership. One hire sourced through the room is the comparison worth making.`,
+	hiring: `Contingency recruiter fees are set as a percentage of first-year salary — your own agency agreements will state yours, and it is usually the largest single line in a senior hire. Multiply your rate by one senior engineering salary and compare that to ELC's flat fee per hire plus a year of membership. That is the comparison worth making.`,
 	brand_awareness: `${ELC_FACTS.membersLabel} engineering leaders is not a cold audience — it is CTOs, VPs and engineering managers who decide what their org buys. Compare the cost of reaching this exact audience through paid channels like LinkedIn thought-leader ads against a room that already trusts the host.`,
 	product_feedback: `${ELC_FACTS.meetupAttendance}+ people in the room per meetup, ${ELC_FACTS.meetupsPerYear} meetups a year, across ${andJoin(ELC_FACTS.cities)}. That is a recurring, opt-in panel of the exact buyer persona most B2B dev-tool and infra companies pay research firms to recruit.`,
 	thought_leadership: `A stage in front of ${ELC_FACTS.conferenceAttendees}+ people at the annual conference, or ${ELC_FACTS.meetupAttendance}+ at a monthly meetup, is inventory most companies pay for elsewhere. Here it is part of the membership, not an upsell.`,
@@ -70,13 +70,11 @@ const GOAL_DELIVERABLES: Record<PartnershipGoal, string[]> = {
 	hiring: [
 		"our hardest open roles featured to the member base and in the newsletter",
 		"a hiring meetup hosted in our office, with our speaker on the bill",
-		// NOT "introductions": the terms block says introductions are not for sale at any price,
-		// and the old wording ("senior leaders introduced without a recruiter fee") read as a
-		// direct contradiction of it to two personas. Marian's List is a place candidates opt
-		// into, not a brokerage.
-		"our roles carried on Marian's List, where senior leaders and builders opt in to be found — a hiring channel, not brokered introductions",
+		// 2026-10-20 (Marian): Marian's List is folded into ELC. Hiring intros are now sold, always
+		// double opt-in, and every hire carries the ELC fee per hire.
+		"priority intros curated by Marian, only to senior leaders who said yes first",
 		"a company spotlight on our engineering culture, twice a year",
-		"a two-week recruiting sprint as an add-on when one role is urgent",
+		"an in-person intro with Marian as an add-on when one role is urgent",
 	],
 	brand_awareness: [
 		"our logo in the monthly newsletter and listed as a partner across every ELC channel",
@@ -328,7 +326,7 @@ Which of those to take, and what each costs, is composed item by item at https:/
 	const outcomeUnit = isDevelopment
 		? "one engineering manager who grows instead of leaving"
 		: input.goal === "hiring"
-			? "one senior hire made without a recruiter fee"
+			? "one senior hire made through the room instead of an agency"
 			: input.goal === "product_feedback"
 				? "one piece of product feedback that changes a roadmap decision"
 				: "one qualified conversation with a decision-maker";
