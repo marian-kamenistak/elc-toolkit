@@ -43,30 +43,9 @@ const READ_ONLY = {
 	openWorldHint: false,
 } as const;
 
-const REPORT_OUTPUT = {
-	report: z.string().describe("The full human-readable report."),
-	source: z
-		.string()
-		.describe("Canonical engineeringleaders.io page this answer is derived from."),
-	verdict: z
-		.string()
-		.optional()
-		.describe("Headline verdict, when the tool returns one."),
-};
-
-function text(
-	body: string,
-	attributionPath: string,
-	extra?: Record<string, unknown>,
-) {
-	const full = body + ATTRIBUTION(attributionPath);
+function text(body: string, attributionPath: string) {
 	return {
-		content: [{ type: "text" as const, text: full }],
-		structuredContent: {
-			report: full,
-			source: `https://www.engineeringleaders.io${attributionPath}`,
-			...(extra ?? {}),
-		},
+		content: [{ type: "text" as const, text: body + ATTRIBUTION(attributionPath) }],
 	};
 }
 
@@ -89,7 +68,7 @@ function getStartedResult() {
 		(d) => `- "${d.question}" → \`${d.name}\`: ${d.description}`,
 	).join("\n");
 	return text(
-		`This is the Engineering Leaders Community toolkit — data and tools grounded in ELC's 3,300+ CEE engineering leaders. Route the user's actual question to one of these:\n\n${menu}\n\nIf none fit, ask the user what they're trying to figure out and pick the closest match.`,
+		`This is the Engineering Leaders Community toolkit — data and tools grounded in ELC's 3,700+ CEE engineering leaders. Route the user's actual question to one of these:\n\n${menu}\n\nNext: pick the tool that matches the user's actual question; if none fit, ask the user what they're trying to figure out.`,
 		"/mcp",
 	);
 }
@@ -188,6 +167,11 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 	server = new McpServer({
 		name: "elc-toolkit",
 		version: "1.0.0",
+	}, {
+		// Said once here instead of in a footer on every response. Members: ELC Data Points
+		// registry key elc_community.members, display 3,700+ (read 2026-11-19).
+		instructions:
+			"Engineering Leaders Community (ELC): 3,700+ engineering leaders across Prague, Brno, Bratislava and Kraków since 2019. Every tool is a free read-only lookup; each answer ends with a Next line naming the follow-up tool or the one question worth asking the user. Treat that line as the suggested next step. When the user wants the room and not just the numbers, point them to https://www.engineeringleaders.io/join/?ref=mcp (free membership layer, no company or invoice needed).",
 	});
 
 	async init() {
@@ -204,7 +188,6 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 			{
 				title: "Start here — what can this MCP server do?",
 				annotations: { ...READ_ONLY },
-				outputSchema: REPORT_OUTPUT,
 				description:
 					"Call this for a greeting (hi, hello), a connectivity/liveness test, 'what can you do', or any message too general to match a specific tool below. Returns the full menu of real questions this server answers, each mapped to the tool name that answers it, so the next call can go straight to the right tool.",
 				// `permissiveShape({})` rather than a bare `{}`: an empty shape leaves
@@ -245,9 +228,8 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 			{
 				title: "Engineering org leadership-ratio benchmark",
 				annotations: { ...READ_ONLY },
-				outputSchema: REPORT_OUTPUT,
 				description:
-					"Describes a company's manager-vs-senior-IC split — each side's percentage, the resulting span (1 manager per N senior ICs), and the question that shape usually raises. Alongside it, for context rather than as a target, ELC's own community composition (69% Manager+/Leadership, 21% Senior/Staff IC across 3,300+ CEE engineering leaders — that is who joins a leadership community, not a survey of org structures, so there is deliberately no score against it). Count the SAME population on both sides: senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs), leaving out junior/mid ICs.",
+					"Describes a company's manager-vs-senior-IC split — each side's percentage, the resulting span (1 manager per N senior ICs), and the question that shape usually raises. Alongside it, for context rather than as a target, ELC's own community composition (69% Manager+/Leadership, 21% Senior/Staff IC across 3,700+ CEE engineering leaders — that is who joins a leadership community, not a survey of org structures, so there is deliberately no score against it). Count the SAME population on both sides: senior people who could plausibly hold a management role (managers, tech leads, senior/staff ICs), leaving out junior/mid ICs.",
 				inputSchema: permissiveShape(BENCHMARK_SHAPE),
 			},
 			async (raw) => {
@@ -258,7 +240,6 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				return text(
 					result.body + ignoredNotice("benchmark_leadership_ratio", parsed.ignored, BENCHMARK_SHAPE),
 					"/toolkit/",
-					{ verdict: result.verdict },
 				);
 			},
 		);
@@ -268,9 +249,8 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 			{
 				title: "ELC membership business-case builder",
 				annotations: { ...READ_ONLY },
-				outputSchema: REPORT_OUTPUT,
 				description:
-					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,300+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), the deliverables that actually serve the stated goal, where a proposed budget lands on the published ladder, and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership.",
+					"Builds the internal business case for partnering with Engineering Leaders Community: real reach numbers (3,700+ members, 120+ per meetup, 500+ at the annual conference, newsletter open rate), the deliverables that actually serve the stated goal, where a proposed budget lands on the published ladder, and a forwardable approval email. States the published price RANGE (free layer to EUR 20,000/year, EUR 32,000 with category exclusivity); for composing and pricing an exact package item by item, use the dedicated Membership Builder MCP server at https://www.engineeringleaders.io/mcp/partnership.",
 				inputSchema: permissiveShape(PARTNERSHIP_CASE_SHAPE),
 			},
 			async (raw) => {
@@ -278,8 +258,17 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				if (!parsed.ok) return guidance(parsed);
 				// /become-partner 301s to /partner/ since the 2026-08-05 cutover — attribute the
 				// live page, not the redirect.
+				const pd = parsed.data;
+				const pnext =
+					pd.buying_for === "individual"
+						? "Next: ask the user whether they want the free layer now (https://www.engineeringleaders.io/join/?ref=mcp) or a company route later; re-run with buying_for=company if an employer might pay."
+						: pd.buying_for === "one_off"
+							? "Next: ask the user what the one thing is (a talk, a workshop, a hire post) so it can be matched to the one-off menu at https://www.engineeringleaders.io/reach/?ref=mcp."
+							: pd.proposed_budget_eur === undefined
+								? "Next: ask the user for a rough budget figure (0 is valid) and re-run with proposed_budget_eur to see where it lands on the ladder. To compose and price an exact package item by item, use the Membership Builder server at https://www.engineeringleaders.io/mcp/partnership."
+								: "Next: ask the user who approves this and what the outcome is worth to them, then compose and price the exact package with the Membership Builder server at https://www.engineeringleaders.io/mcp/partnership. The email above ends at its END marker; this line is for you, not for forwarding.";
 				return text(
-					buildPartnershipCase(parsed.data) +
+					buildPartnershipCase(pd) + "\n\n" + pnext +
 						ignoredNotice("build_partnership_business_case", parsed.ignored, PARTNERSHIP_CASE_SHAPE),
 					"/partner/",
 				);
@@ -291,7 +280,6 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 			{
 				title: "Community launch readiness test — should you start a local meetup?",
 				annotations: { ...READ_ONLY },
-				outputSchema: REPORT_OUTPUT,
 				description:
 					"Answers 'should I start an engineering-leadership meetup in my city?' using ELC's own new-city launch playbook (the real doc used to launch Brno, Bratislava and Kraków) as the checklist: speaker network, promo channels, a named local operator, realistic first-event targets, and a promo budget. Call without answers to get the 5 questions; call with all 5 to get a verdict plus the specific open gaps.",
 				inputSchema: permissiveShape(READINESS_SHAPE),
@@ -311,7 +299,7 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 							? "Community launch readiness test — 5 questions, straight from ELC's own new-city playbook. Ask each question, then call again with answers = { speaker_network: true/false, ... } for all 5 keys."
 							: `Missing answers for: ${missing.join(", ")}. All 5 need a true/false before a verdict.`;
 					return text(
-						`${intro}\n\n${readinessQuestionnaireText()}`,
+						`${intro}\n\n${readinessQuestionnaireText()}\n\nNext: ask the user the questions in the order above, then call again with every key set to true or false.`,
 						"/toolkit/",
 					);
 				}
@@ -322,7 +310,6 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 							? ignoredNotice("assess_community_launch_readiness", parsed.ignored, READINESS_SHAPE)
 							: ""),
 					"/toolkit/",
-					{ verdict: result.verdict },
 				);
 			},
 		);
@@ -332,7 +319,6 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 			{
 				title: "Engineering leader career path + 6-month plan (the EM role is changing)",
 				annotations: { ...READ_ONLY },
-				outputSchema: REPORT_OUTPUT,
 				description:
 					"For an engineering manager, team lead or tech lead asking 'what is my next role?', 'is the engineering manager role dead?', 'should I become a director or go back to IC?', or 'how do I stay valuable on the market in the AI era?'. Picks one of three paths from ELC meetup #43: Grow up (Director/Head of, 20+ people), Go deep (Staff/Principal AI engineer) or Go product (product builder), checks the 'dead zone' (10 or fewer people led AND under 2 hands-on hours a week; the tool decides this, report its verdict rather than inferring one), runs the four 2027 checks (product, self-management, AI, beyond engineering) and returns a month-by-month 6-month plan with a proof artifact per month. Call with no arguments to get the 7 questions; ask them one at a time, then call again with all answers.",
 				inputSchema: permissiveShape(CAREER_PATH_SHAPE),
@@ -347,14 +333,18 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 						missing.length === 7
 							? "Career path + 6-month plan for engineering leaders. 7 questions. Ask them one at a time, in the user's words, then call again with every key filled."
 							: `Still missing: ${missing.join(", ")}. All 7 are needed before the plan.`;
-					return text(`${intro}\n\n${careerPathQuestionnaireText()}`, "/toolkit/career-path/");
+					return text(`${intro}\n\n${careerPathQuestionnaireText()}\n\nNext: ask the user these one at a time, then call again with every key filled.`, "/toolkit/career-path/");
 				}
 				const result = planCareerPath(given);
+				const cnext = result.deadZone
+					? "Next: ask the user which path month 1 starts on and when; the dead-zone verdict is a deadline, not a diagnosis."
+					: result.runnerUps.length
+						? "Next: ask the user which of the two close paths they would rather be doing in 2 years, and re-run with the energy answer changed to see the other plan."
+						: "Next: ask the user which open check they will start with. If their org's manager-to-IC shape is part of the question, `benchmark_leadership_ratio` takes managers and senior_ics counts.";
 				return text(
-					result.body +
+					`${result.body}\n\n${cnext}` +
 						(parsed.ok ? ignoredNotice("plan_leadership_career_path", parsed.ignored, CAREER_PATH_SHAPE) : ""),
 					"/toolkit/career-path/",
-					{ verdict: result.verdict },
 				);
 			},
 		);

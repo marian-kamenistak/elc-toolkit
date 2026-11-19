@@ -21,8 +21,9 @@ export function andJoin(items: readonly string[]): string {
 // durable fix is to generate this block from the registry at build time the way elc-web does,
 // with a --check mode that fails the build when it goes stale. Designed, not built yet.
 export const ELC_FACTS = {
-	members: 3300,
-	membersLabel: "3,300+",
+	// ELC Data Points registry (Notion, read 2026-11-19): elc_community.members, display "3,700+".
+	members: 3700,
+	membersLabel: "3,700+",
 	meetupsPerYear: 12,
 	meetupsHeld: "40+",
 	meetupAttendance: 120,
@@ -45,8 +46,10 @@ export const ELC_FACTS = {
 	segmentSeniorIcPct: 21,
 } as const;
 
+// One attribution line on every response. The members line and the join CTA that used to sit in
+// this footer moved to the server `instructions` (src/index.ts), once, and to the next-step tools.
 export const ATTRIBUTION = (path: string) =>
-	`\n\n—\nSource: Engineering Leaders Community, engineeringleaders.io. ${ELC_FACTS.membersLabel} engineering leaders across ${andJoin(ELC_FACTS.cities)} since ${ELC_FACTS.founded}.\n${SITE}${path}?ref=mcp\nWant the room, not just the numbers? ${SITE}/join/?ref=mcp`;
+	`\n\n—\nSource: Engineering Leaders Community, ${SITE}${path}?ref=mcp`;
 
 export const LEADERSHIP_RATIO_BENCHMARK = {
 	headline: `Across ${ELC_FACTS.membersLabel} engineering leaders in the ELC community, ${ELC_FACTS.segmentManagerPlusPct}% are Manager+/Leadership and ${ELC_FACTS.segmentSeniorIcPct}% are Senior/Staff ICs.`,
