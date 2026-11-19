@@ -237,8 +237,19 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 				if (!parsed.ok) return guidance(parsed);
 				const { managers, senior_ics } = parsed.data;
 				const result = benchmarkLeadershipRatio({ managers, senior_ics });
+				const total = managers + senior_ics;
+				const next =
+					total <= 0
+						? "Next: ask the user who counts as a manager and who as a senior IC in their org, then call again with both counts."
+						: managers === 0 || senior_ics === 0
+							? "Next: ask the user whether the missing side sits outside the group they counted (another team, another title), then re-run with the full senior population."
+							: total < 10
+								? "Next: ask the user whether the counts cover the whole engineering org or one team; at this size the shape tells little. If they are asking about their own role, `plan_leadership_career_path` with no arguments returns its 7 questions."
+								: managers / total > 0.5
+									? "Next: ask the user if a real senior/staff IC track exists in their org. If they are an IC or EM asking where they go from here, run `plan_leadership_career_path` (no arguments returns its 7 questions). If the skew is a case for developing leaders, `build_partnership_business_case` with goal=people_development."
+									: "Next: ask the user whether management capacity is the bottleneck (spans, delivery slipping on coordination). If it is, `build_partnership_business_case` with goal=people_development builds the case for developing leaders; if they are an EM weighing their own next role, `plan_leadership_career_path`.";
 				return text(
-					result.body + ignoredNotice("benchmark_leadership_ratio", parsed.ignored, BENCHMARK_SHAPE),
+					`${result.body}\n\n${next}` + ignoredNotice("benchmark_leadership_ratio", parsed.ignored, BENCHMARK_SHAPE),
 					"/toolkit/",
 				);
 			},
@@ -304,8 +315,14 @@ export class ElcToolkit extends McpAgent<Env, unknown, McpGeo> {
 					);
 				}
 				const result = assessCommunityReadiness(given as Record<string, boolean>);
+				const rnext =
+					result.gaps.length === 0
+						? "Next: ask the user which city and who the named local operator is, then point them to the ELC community (https://www.engineeringleaders.io/join/?ref=mcp) for speakers and the playbook in practice."
+						: result.metCount >= 2
+							? `Next: ask the user what stops them closing the first open item (${result.gaps.length} open) and re-run with updated answers once it moves. A leader weighing their own role instead of a launch can use \`plan_leadership_career_path\`.`
+							: "Next: ask the user whether a month on speakers and a local operator is realistic, and re-run this test afterwards. For a different question, `get_started` lists what else this server answers.";
 				return text(
-					result.body +
+					`${result.body}\n\n${rnext}` +
 						(parsed.ok
 							? ignoredNotice("assess_community_launch_readiness", parsed.ignored, READINESS_SHAPE)
 							: ""),
